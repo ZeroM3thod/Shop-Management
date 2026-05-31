@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --surface-2: #EEECEA;
+    --border: #E0DDD6;
+    --text-1: #18170F;
+    --text-2: #65625A;
+    --text-3: #A09D96;
+    --gold: #C49A3C;
+    --gold-bg: #FBF4E5;
+    --green: #1F6B45;
+    --green-bg: #E6F3EC;
+    --red: #B83232;
+    --red-bg: #FAE8E8;
+    --blue: #1E4FAD;
+    --blue-bg: #E8EFFA;
+    --sidebar: #111010;
+    --sidebar-text: #C8C5BC;
+    --sidebar-muted: #6B6862;
+    --gold-active: #C49A3C;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 15px; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--sidebar);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .sidebar-header {
+    padding: 24px 16px 20px;
+    border-bottom: 1px solid #1E1D1D;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-box {
+    width: 38px; height: 38px;
+    background: var(--gold);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-box svg { width: 20px; height: 20px; }
+
+  .sidebar-brand { flex: 1; }
+  .sidebar-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .sidebar-sub {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    color: var(--sidebar-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 8px;
+    overflow-y: auto;
+  }
+
+  .nav-group { margin-bottom: 24px; }
+
+  .nav-group-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--sidebar-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0 8px;
+    margin-bottom: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    position: relative;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: #1E1D1D; color: #fff; }
+
+  .nav-item.active {
+    background: rgba(196,154,60,0.12);
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 3px;
+    background: var(--gold);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 20px;
+    line-height: 1.4;
+  }
+
+  .sidebar-footer {
+    padding: 12px 8px;
+    border-top: 1px solid #1E1D1D;
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .user-card:hover { background: #1E1D1D; }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-name { font-size: 0.85rem; font-weight: 500; color: #fff; }
+  .user-role { font-size: 0.7rem; color: var(--sidebar-muted); }
+
+  /* ─── OVERLAY ─── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 150;
+  }
+
+  .overlay.active { display: block; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    flex: 1;
+    margin-left: 240px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    height: 64px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+  }
+
+  .hamburger {
+    display: none;
+    width: 38px; height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .hamburger svg { width: 18px; height: 18px; }
+
+  .topbar-title-area { flex: 1; }
+
+  .topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-1);
+    line-height: 1.2;
+  }
+
+  .topbar-date {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    line-height: 1;
+  }
+
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    transition: background 0.15s ease;
+  }
+
+  .icon-btn:hover { background: var(--surface-2); }
+  .icon-btn svg { width: 18px; height: 18px; color: var(--text-2); }
+
+  .notif-dot {
+    position: absolute;
+    top: 7px; right: 7px;
+    width: 7px; height: 7px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 1.5px solid var(--surface);
+  }
+
+  /* ─── PAGE CONTENT ─── */
+  .page-content {
+    padding: 24px;
+    flex: 1;
+  }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header { margin-bottom: 24px; }
+
+  .greeting {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.55rem;
+    color: var(--text-1);
+    line-height: 1.3;
+  }
+
+  .greeting-sub {
+    font-size: 0.85rem;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  /* ─── KPI GRID ─── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+  }
+
+  .kpi-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .kpi-icon svg { width: 18px; height: 18px; }
+
+  .kpi-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.55rem;
+    color: var(--text-1);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value .currency {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .kpi-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 0.72rem; font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 20px;
+  }
+
+  .badge.up { background: var(--green-bg); color: var(--green); }
+  .badge.down { background: var(--red-bg); color: var(--red); }
+  .badge.neutral { background: var(--blue-bg); color: var(--blue); }
+  .badge svg { width: 10px; height: 10px; }
+
+  .kpi-context { font-size: 0.72rem; color: var(--text-3); }
+
+  /* ─── SALES CHART ─── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .chart-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-1);
+  }
+
+  .chart-sub { font-size: 0.73rem; color: var(--text-3); margin-top: 3px; }
+
+  .period-tabs {
+    display: flex;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .period-tab {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-3);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .period-tab.active {
+    background: var(--surface);
+    color: var(--text-1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .chart-wrap { height: 200px; position: relative; }
+
+  /* ─── BOTTOM GRID ─── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-1);
+  }
+
+  .card-link {
+    font-size: 0.75rem;
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .card-link:hover { text-decoration: underline; }
+
+  /* ─── RECENT SALES ─── */
+  .sale-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sale-row:last-child { border-bottom: none; }
+
+  .sale-num {
+    width: 32px; height: 32px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-2);
+    flex-shrink: 0;
+  }
+
+  .sale-info { flex: 1; min-width: 0; }
+
+  .sale-products {
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sale-meta { font-size: 0.7rem; color: var(--text-3); margin-top: 2px; }
+
+  .sale-amount {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-1);
+    flex-shrink: 0;
+  }
+
+  /* ─── LOW STOCK ─── */
+  .stock-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stock-row:last-child { border-bottom: none; }
+
+  .stock-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stock-dot.critical { background: var(--red); }
+  .stock-dot.low { background: #E0883A; }
+
+  .stock-info { flex: 1; min-width: 0; }
+
+  .stock-name {
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--text-1);
+  }
+
+  .stock-qty { font-size: 0.7rem; color: var(--text-3); margin-top: 2px; }
+
+  .stock-bar-area { width: 60px; flex-shrink: 0; text-align: right; }
+
+  .stock-bar-bg {
+    width: 60px; height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+
+  .stock-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    width: 0;
+    transition: width 0.4s ease;
+  }
+
+  .stock-bar-fill.critical { background: var(--red); }
+  .stock-bar-fill.low { background: #E0883A; }
+
+  .stock-pct { font-size: 0.65rem; color: var(--text-3); }
+
+  /* ─── QUICK ACTIONS ─── */
+  .actions-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .action-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    text-decoration: none;
+  }
+
+  .action-btn:hover {
+    border-color: var(--gold);
+    background: var(--gold-bg);
+    transform: translateY(-2px);
+  }
+
+  .action-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .action-icon svg { width: 20px; height: 20px; }
+
+  .action-label {
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: var(--text-2);
+    text-align: center;
+  }
+
+  /* ─── EXPENSE SUMMARY ─── */
+  .expense-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .expense-total {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--red);
+  }
+
+  .expense-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .expense-row:last-child { border-bottom: none; }
+
+  .expense-color {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .expense-name { flex: 1; font-size: 0.82rem; color: var(--text-2); }
+
+  .expense-amount { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+
+  .expense-pct {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    width: 35px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 68px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-inner {
+    display: flex;
+    align-items: center;
+    height: 68px;
+    padding: 0 4px;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--text-3);
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 4px;
+    transition: color 0.15s ease;
+  }
+
+  .bottom-nav-item.active { color: var(--gold); }
+  .bottom-nav-item svg { width: 20px; height: 20px; }
+
+  .bottom-nav-sell {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    background: var(--text-1);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 14px;
+    margin: 8px 4px;
+    padding: 4px;
+    height: calc(100% - 16px);
+  }
+
+  .bottom-nav-sell svg { width: 22px; height: 22px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .hamburger { display: flex; }
+    .page-content { padding: 16px; padding-bottom: 84px; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .bottom-nav { display: block; }
+    .greeting { font-size: 1.3rem; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-value { font-size: 1.3rem; }
+    .action-icon { width: 34px; height: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="sidebar-brand">
+      <div class="sidebar-name">GreenBasket</div>
+      <div class="sidebar-sub">Grocery POS</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="sell.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Sell
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Products
+        <span class="nav-badge">142</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Categories
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Stock
+        <span class="nav-badge">5</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Cash Reserve
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Sales History
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Expenses
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Contacts</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        Suppliers
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Analytics</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">System</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Settings
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">RM</div>
+      <div>
+        <div class="user-name">Rahim Mia</div>
+        <div class="user-role">Shop Owner</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-date" id="topbarDate"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div class="page-content">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="greeting" id="greeting">Good Morning, Rahim 👋</div>
+      <div class="greeting-sub">Here's what's happening at your shop today</div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <!-- Today's Sales -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--gold-bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="kpi-label">Today's Sales</div>
+        <div class="kpi-value"><span class="currency">৳</span>24,850</div>
+        <div class="kpi-footer">
+          <span class="badge up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            12.4%
+          </span>
+          <span class="kpi-context">vs yesterday</span>
+        </div>
+      </div>
+
+      <!-- Today's Profit -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--green-bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <div class="kpi-label">Today's Profit</div>
+        <div class="kpi-value"><span class="currency">৳</span>6,240</div>
+        <div class="kpi-footer">
+          <span class="badge up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            33.1%
+          </span>
+          <span class="kpi-context">margin</span>
+        </div>
+      </div>
+
+      <!-- Today's Expenses -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--red-bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#B83232" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="kpi-label">Today's Expenses</div>
+        <div class="kpi-value"><span class="currency">৳</span>3,200</div>
+        <div class="kpi-footer">
+          <span class="badge down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            8.2%
+          </span>
+          <span class="kpi-context">vs yesterday</span>
+        </div>
+      </div>
+
+      <!-- Cash Reserve -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--blue-bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div class="kpi-label">Cash Reserve</div>
+        <div class="kpi-value"><span class="currency">৳</span>1,15,400</div>
+        <div class="kpi-footer">
+          <span class="badge neutral">142 active</span>
+          <span class="kpi-context">products</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALES CHART -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Sales Overview</div>
+          <div class="chart-sub">Daily revenue this week</div>
+        </div>
+        <div class="period-tabs">
+          <button class="period-tab active" data-period="7d">7D</button>
+          <button class="period-tab" data-period="1m">1M</button>
+          <button class="period-tab" data-period="3m">3M</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+      <!-- Recent Sales -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Sales</div>
+          <a class="card-link" href="#">View all</a>
+        </div>
+        <div class="sale-row">
+          <div class="sale-num">#28</div>
+          <div class="sale-info">
+            <div class="sale-products">Rice, Onion, Mustard Oil</div>
+            <div class="sale-meta">2:34 PM · 4 items</div>
+          </div>
+          <div class="sale-amount">৳840</div>
+        </div>
+        <div class="sale-row">
+          <div class="sale-num">#27</div>
+          <div class="sale-info">
+            <div class="sale-products">Lentils, Salt, Sugar</div>
+            <div class="sale-meta">1:58 PM · 3 items</div>
+          </div>
+          <div class="sale-amount">৳320</div>
+        </div>
+        <div class="sale-row">
+          <div class="sale-num">#26</div>
+          <div class="sale-info">
+            <div class="sale-products">Flour, Turmeric, Cumin</div>
+            <div class="sale-meta">1:12 PM · 5 items</div>
+          </div>
+          <div class="sale-amount">৳1,240</div>
+        </div>
+        <div class="sale-row">
+          <div class="sale-num">#25</div>
+          <div class="sale-info">
+            <div class="sale-products">Cooking Oil, Bread</div>
+            <div class="sale-meta">12:30 PM · 2 items</div>
+          </div>
+          <div class="sale-amount">৳580</div>
+        </div>
+        <div class="sale-row">
+          <div class="sale-num">#24</div>
+          <div class="sale-info">
+            <div class="sale-products">Potato, Ginger, Garlic</div>
+            <div class="sale-meta">11:45 AM · 6 items</div>
+          </div>
+          <div class="sale-amount">৳460</div>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Low Stock Alert</div>
+          <a class="card-link" href="#">Manage</a>
+        </div>
+        <div class="stock-row">
+          <div class="stock-dot critical"></div>
+          <div class="stock-info">
+            <div class="stock-name">Mustard Oil</div>
+            <div class="stock-qty">0.8 L remaining</div>
+          </div>
+          <div class="stock-bar-area">
+            <div class="stock-bar-bg"><div class="stock-bar-fill critical" data-pct="8"></div></div>
+            <div class="stock-pct">8%</div>
+          </div>
+        </div>
+        <div class="stock-row">
+          <div class="stock-dot critical"></div>
+          <div class="stock-info">
+            <div class="stock-name">Turmeric Powder</div>
+            <div class="stock-qty">120 gm remaining</div>
+          </div>
+          <div class="stock-bar-area">
+            <div class="stock-bar-bg"><div class="stock-bar-fill critical" data-pct="12"></div></div>
+            <div class="stock-pct">12%</div>
+          </div>
+        </div>
+        <div class="stock-row">
+          <div class="stock-dot low"></div>
+          <div class="stock-info">
+            <div class="stock-name">Basmati Rice</div>
+            <div class="stock-qty">3.2 kg remaining</div>
+          </div>
+          <div class="stock-bar-area">
+            <div class="stock-bar-bg"><div class="stock-bar-fill low" data-pct="22"></div></div>
+            <div class="stock-pct">22%</div>
+          </div>
+        </div>
+        <div class="stock-row">
+          <div class="stock-dot low"></div>
+          <div class="stock-info">
+            <div class="stock-name">Green Lentils</div>
+            <div class="stock-qty">1.5 kg remaining</div>
+          </div>
+          <div class="stock-bar-area">
+            <div class="stock-bar-bg"><div class="stock-bar-fill low" data-pct="28"></div></div>
+            <div class="stock-pct">28%</div>
+          </div>
+        </div>
+        <div class="stock-row">
+          <div class="stock-dot low"></div>
+          <div class="stock-info">
+            <div class="stock-name">Cumin Seeds</div>
+            <div class="stock-qty">200 gm remaining</div>
+          </div>
+          <div class="stock-bar-area">
+            <div class="stock-bar-bg"><div class="stock-bar-fill low" data-pct="35"></div></div>
+            <div class="stock-pct">35%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="actions-card">
+      <div class="card-header">
+        <div class="card-title">Quick Actions</div>
+      </div>
+      <div class="actions-grid">
+        <a class="action-btn" href="sell.html">
+          <div class="action-icon" style="background: var(--gold-bg);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </div>
+          <span class="action-label">New Sale</span>
+        </a>
+        <a class="action-btn" href="#">
+          <div class="action-icon" style="background: var(--green-bg);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </div>
+          <span class="action-label">Add Stock</span>
+        </a>
+        <a class="action-btn" href="#">
+          <div class="action-icon" style="background: var(--blue-bg);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="action-label">Add Expense</span>
+        </a>
+        <a class="action-btn" href="#">
+          <div class="action-icon" style="background: #F3EAF5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7B3FA0" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <span class="action-label">Reports</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- EXPENSE SUMMARY -->
+    <div class="card">
+      <div class="expense-header">
+        <div>
+          <div class="card-title">Monthly Expenses</div>
+          <div style="font-size:0.73rem; color:var(--text-3); margin-top:3px;">May 2026 breakdown</div>
+        </div>
+        <div class="expense-total">৳18,500</div>
+      </div>
+      <div class="expense-row">
+        <div class="expense-color" style="background:#1E4FAD;"></div>
+        <div class="expense-name">Shop Rent</div>
+        <div class="expense-amount">৳8,000</div>
+        <div class="expense-pct">43%</div>
+      </div>
+      <div class="expense-row">
+        <div class="expense-color" style="background:#E0883A;"></div>
+        <div class="expense-name">Electricity</div>
+        <div class="expense-amount">৳3,200</div>
+        <div class="expense-pct">17%</div>
+      </div>
+      <div class="expense-row">
+        <div class="expense-color" style="background:#1F6B45;"></div>
+        <div class="expense-name">Staff Salary</div>
+        <div class="expense-amount">৳5,500</div>
+        <div class="expense-pct">30%</div>
+      </div>
+      <div class="expense-row">
+        <div class="expense-color" style="background:#B83232;"></div>
+        <div class="expense-name">Maintenance</div>
+        <div class="expense-amount">৳1,800</div>
+        <div class="expense-pct">10%</div>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+</main>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item active" href="#" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Home
+    </a>
+    <a class="bottom-nav-item" href="#" aria-label="Products">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Products
+    </a>
+    <a class="bottom-nav-sell" href="sell.html" aria-label="Sell">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      SELL
+    </a>
+    <a class="bottom-nav-item" href="#" aria-label="Reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reports
+    </a>
+    <a class="bottom-nav-item" href="#" aria-label="More">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      More
+    </a>
+  </div>
+</nav>
+
+<script>
+  // Sidebar
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const hamburger = document.getElementById('hamburger');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
+
+  hamburger.addEventListener('click', openSidebar);
+  overlay.addEventListener('click', closeSidebar);
+
+  // Greeting
+  function setGreeting() {
+    const h = new Date().getHours();
+    let greeting;
+    if (h < 12) greeting = "Good Morning, Rahim 👋";
+    else if (h < 17) greeting = "Good Afternoon, Rahim 👋";
+    else greeting = "Good Evening, Rahim 👋";
+    document.getElementById('greeting').textContent = greeting;
+  }
+  setGreeting();
+
+  // Date
+  function setDate() {
+    const d = new Date();
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('topbarDate').textContent =
+      `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  }
+  setDate();
+
+  // Stock bars animation
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.stock-bar-fill').forEach(el => {
+      const pct = el.dataset.pct;
+      setTimeout(() => { el.style.width = pct + '%'; }, 100);
+    });
+  });
+
+  // Period tabs
+  document.querySelectorAll('.period-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Chart.js
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [
+        {
+          label: 'Sales',
+          data: [18200, 22400, 19800, 26100, 31200, 38900, 24850],
+          backgroundColor: '#1A1917',
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        },
+        {
+          label: 'Profit',
+          data: [4800, 5900, 5200, 6800, 8200, 10200, 6240],
+          backgroundColor: '#C49A3C',
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: {
+            font: { family: 'Outfit', size: 11 },
+            color: '#65625A',
+            usePointStyle: true,
+            pointStyle: 'rect',
+            boxWidth: 10,
+            boxHeight: 10,
+            borderRadius: 3,
+            padding: 16
+          }
+        },
+        tooltip: {
+          backgroundColor: '#18170F',
+          borderRadius: 8,
+          padding: 10,
+          titleFont: { family: 'Outfit', size: 11 },
+          bodyFont: { family: 'Outfit', size: 12, weight: '600' },
+          callbacks: {
+            label: ctx => ` ৳${ctx.parsed.y.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Outfit', size: 11 },
+            color: '#A09D96'
+          }
+        },
+        y: {
+          grid: {
+            color: '#E0DDD6',
+            lineWidth: 1,
+            dash: [4, 4]
+          },
+          border: { display: false, dash: [4, 4] },
+          ticks: {
+            font: { family: 'Outfit', size: 11 },
+            color: '#A09D96',
+            callback: val => '৳' + (val >= 1000 ? (val/1000).toFixed(0)+'k' : val)
+          }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

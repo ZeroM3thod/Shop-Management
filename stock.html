@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Stock Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F5F4F0;--surface:#FFFFFF;--surface-2:#EEECEA;--border:#E0DDD6;
+  --text-1:#18170F;--text-2:#65625A;--text-3:#A09D96;
+  --gold:#C49A3C;--gold-bg:#FBF4E5;--green:#1F6B45;--green-bg:#E6F3EC;
+  --red:#B83232;--red-bg:#FAE8E8;--blue:#1E4FAD;--blue-bg:#E8EFFA;
+  --sidebar:#111010;--sidebar-text:#C8C5BC;--sidebar-muted:#6B6862;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;display:flex;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-header{padding:24px 16px 20px;border-bottom:1px solid #1E1D1D;display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-box svg{width:20px;height:20px;}
+.sidebar-name{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;color:#fff;}
+.sidebar-sub{font-size:0.7rem;color:var(--sidebar-muted);letter-spacing:0.05em;text-transform:uppercase;}
+.sidebar-nav{flex:1;padding:16px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:0.65rem;font-weight:600;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:0.88rem;color:var(--sidebar-text);text-decoration:none;cursor:pointer;transition:background 0.15s,color 0.15s;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:#1E1D1D;color:#fff;}
+.nav-item.active{background:rgba(196,154,60,0.12);color:var(--gold);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;font-weight:600;padding:2px 6px;border-radius:20px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid #1E1D1D;}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.user-card:hover{background:#1E1D1D;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:0.85rem;font-weight:500;color:#fff;}
+.user-role{font-size:0.7rem;color:var(--sidebar-muted);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:150;}
+.overlay.active{display:block;}
+.main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.hamburger{display:none;width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
+.hamburger svg{width:18px;height:18px;}
+.topbar-title-area{flex:1;}
+.topbar-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.1rem;color:var(--text-1);}
+.topbar-sub{font-size:0.75rem;color:var(--text-3);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;}
+.icon-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.icon-btn:hover{background:var(--surface-2);}
+.icon-btn svg{width:18px;height:18px;color:var(--text-2);}
+.page-content{padding:24px;flex:1;}
+
+/* Alert Banner */
+.alert-banner{background:var(--red-bg);border:1px solid #F0C0C0;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;}
+.alert-banner svg{width:18px;height:18px;color:var(--red);flex-shrink:0;margin-top:1px;}
+.alert-body{flex:1;}
+.alert-title{font-size:0.88rem;font-weight:600;color:var(--red);}
+.alert-items{font-size:0.78rem;color:var(--text-2);margin-top:2px;}
+.alert-link{font-size:0.78rem;color:var(--red);font-weight:600;text-decoration:underline;cursor:pointer;margin-top:4px;display:inline-block;}
+
+/* Tabs */
+.tab-bar{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px;margin-bottom:20px;}
+.tab-btn{flex:1;height:40px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:500;color:var(--text-3);cursor:pointer;background:transparent;transition:all 0.15s;}
+.tab-btn.active{background:var(--text-1);color:#fff;font-weight:600;}
+
+/* History List */
+.history-list{display:flex;flex-direction:column;gap:10px;}
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;}
+.history-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);border-color:#D0CCC4;}
+.history-card.expanded{}
+.h-meta{font-size:0.75rem;color:var(--text-3);margin-bottom:6px;}
+.h-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.h-product{font-size:0.9rem;font-weight:600;color:var(--text-1);}
+.h-qty{font-size:0.85rem;font-weight:600;color:var(--green);}
+.h-detail{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.h-detail-item{font-size:0.78rem;color:var(--text-2);}
+.h-detail-item span{color:var(--text-1);font-weight:500;}
+.h-expand{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.history-card.expanded .h-expand{display:block;}
+.h-expand-row{display:flex;justify-content:space-between;padding:5px 0;font-size:0.8rem;border-bottom:1px solid var(--border);}
+.h-expand-row:last-child{border:none;}
+.h-expand-label{color:var(--text-3);}
+.h-expand-val{color:var(--text-1);font-weight:500;}
+
+/* Add Stock Form */
+.add-stock-form{display:none;}
+.add-stock-form.active{display:block;}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.form-card-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.form-card-title{font-size:0.78rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
+.form-card-body{padding:18px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.req{color:var(--red);}
+.form-input,.form-select,.form-textarea{width:100%;height:42px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);outline:none;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);}
+.form-select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A09D96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.form-textarea{height:auto;padding:10px 12px;min-height:68px;resize:vertical;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:0.72rem;color:var(--text-3);margin-top:4px;}
+.form-hint.info{color:var(--blue);}
+.form-hint.warn{color:#C07028;}
+.prefix-input{position:relative;}
+.prefix-input span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-3);}
+.prefix-input .form-input{padding-left:24px;}
+.product-confirm{background:var(--green-bg);border:1px solid #A8D5BC;border-radius:8px;padding:10px 14px;margin-top:8px;display:none;}
+.product-confirm.visible{display:block;}
+.product-confirm-name{font-size:0.88rem;font-weight:600;color:var(--green);}
+.product-confirm-meta{font-size:0.72rem;color:var(--text-2);margin-top:2px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;}
+.toggle-label{font-size:0.88rem;font-weight:500;color:var(--text-1);}
+.toggle-sub{font-size:0.72rem;color:var(--text-3);margin-top:2px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:background 0.2s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.toggle input:checked+.toggle-slider{background:var(--gold);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
+.deduct-info{background:var(--surface-2);border-radius:8px;padding:10px 14px;font-size:0.78rem;color:var(--text-2);margin-top:8px;}
+.btn-save-full{width:100%;height:52px;background:var(--text-1);color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:0.92rem;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.btn-save-full:hover{opacity:0.85;}
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.quick-chip{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-size:0.78rem;font-weight:500;color:var(--text-2);cursor:pointer;transition:all 0.15s;}
+.quick-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg);}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--border);z-index:100;}
+.bottom-nav-inner{display:flex;align-items:center;height:68px;padding:0 4px;}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--text-3);font-size:0.65rem;font-weight:500;padding:4px;transition:color 0.15s;}
+.bottom-nav-item.active{color:var(--gold);}
+.bottom-nav-item svg{width:20px;height:20px;}
+.bottom-nav-sell{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;background:var(--text-1);color:#fff;font-size:0.7rem;font-weight:600;border-radius:14px;margin:8px 4px;padding:4px;height:calc(100% - 16px);}
+.bottom-nav-sell svg{width:22px;height:22px;}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .page-content{padding:16px;padding-bottom:84px;}
+  .bottom-nav{display:block;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item active" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Stock Management</div>
+      <div class="topbar-sub">Inventory control & purchase history</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="Filter" onclick="alert('Filter by date/supplier/product')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Low Stock Alert -->
+    <div class="alert-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="alert-body">
+        <div class="alert-title">4 products need restocking</div>
+        <div class="alert-items">Mustard Oil (3.5 L), Turmeric Powder (0 kg), Green Lentils (1.5 kg), Cumin Seeds (200 gm)</div>
+        <span class="alert-link" onclick="switchTab('history')">View All →</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn" id="tab-history" onclick="switchTab('history')">📋 Purchase History</button>
+      <button class="tab-btn active" id="tab-add" onclick="switchTab('add')">➕ Add Stock</button>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="historyTab" class="history-list" style="display:none;">
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">28 May 2026 · 9:14 AM</div>
+        <div class="h-row">
+          <div class="h-product">🌾 Basmati Rice</div>
+          <div class="h-qty">+50 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,250</span></div>
+          <div class="h-detail-item">Supplier: <span>Karim Traders</span></div>
+          <div class="h-detail-item">Buy price: <span>৳65/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳3,250</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Per unit cost</span><span class="h-expand-val">৳65/kg</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Last buy price</span><span class="h-expand-val">৳62/kg (+4.8%)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Sell price updated</span><span class="h-expand-val">৳80/kg (unchanged)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash (deducted from reserve)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Lot number</span><span class="h-expand-val">LOT-2026-05-A</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">27 May 2026 · 2:30 PM</div>
+        <div class="h-row">
+          <div class="h-product">🛢️ Mustard Oil</div>
+          <div class="h-qty">+20 L added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,100</span></div>
+          <div class="h-detail-item">Supplier: <span>Rahman Wholesale</span></div>
+          <div class="h-detail-item">Buy price: <span>৳155/L</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳3,100</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Per unit cost</span><span class="h-expand-val">৳155/L</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">bKash</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">26 May 2026 · 10:00 AM</div>
+        <div class="h-row">
+          <div class="h-product">🫙 Turmeric Powder</div>
+          <div class="h-qty">+5 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳1,100</span></div>
+          <div class="h-detail-item">Supplier: <span>City Distributors</span></div>
+          <div class="h-detail-item">Buy price: <span>৳220/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳1,100</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Sell price updated</span><span class="h-expand-val">৳260/kg (was ৳250/kg)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">25 May 2026 · 8:45 AM</div>
+        <div class="h-row">
+          <div class="h-product">🧅 Onion</div>
+          <div class="h-qty">+100 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,500</span></div>
+          <div class="h-detail-item">Supplier: <span>Direct Purchase</span></div>
+          <div class="h-detail-item">Buy price: <span>৳35/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Notes</span><span class="h-expand-val">Market price stable</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash</span></div>
+        </div>
+      </div>
+
+    </div><!-- /historyTab -->
+
+    <!-- ADD STOCK TAB -->
+    <div id="addTab" class="add-stock-form active">
+
+      <!-- Section 1: Product -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">1 · Select Product</div></div>
+        <div class="form-card-body">
+          <div class="form-group">
+            <label class="form-label">Search Product <span class="req">*</span></label>
+            <input class="form-input" type="text" id="productSearch" placeholder="Search product to add stock..." oninput="searchProduct(this.value)">
+            <div class="product-confirm visible" id="productConfirm">
+              <div class="product-confirm-name">✓ Basmati Rice (Premium)</div>
+              <div class="product-confirm-meta">Rice & Flour · per kg · Current stock: 50 kg</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Recent Products</label>
+            <div class="quick-chips">
+              <span class="quick-chip" onclick="selectProduct('Basmati Rice')">🌾 Basmati Rice</span>
+              <span class="quick-chip" onclick="selectProduct('Mustard Oil')">🛢️ Mustard Oil</span>
+              <span class="quick-chip" onclick="selectProduct('Onion')">🧅 Onion</span>
+              <span class="quick-chip" onclick="selectProduct('Turmeric Powder')">🫙 Turmeric</span>
+              <span class="quick-chip" onclick="selectProduct('Sugar')">🧂 Sugar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Purchase Details -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">2 · Purchase Details</div></div>
+        <div class="form-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity Purchased <span class="req">*</span></label>
+              <div style="position:relative;">
+                <input class="form-input" type="number" id="qtyInput" placeholder="0" style="padding-right:44px;" oninput="calcCostPerUnit()">
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:0.78rem;color:var(--text-3);">kg</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Cost Paid <span class="req">*</span></label>
+              <div class="prefix-input">
+                <span>৳</span>
+                <input class="form-input" type="number" id="costInput" placeholder="0" oninput="calcCostPerUnit()">
+              </div>
+              <div class="form-hint" id="perUnitHint"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Purchase Date</label>
+              <input class="form-input" type="date" id="purchaseDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Supplier</label>
+              <select class="form-select">
+                <option value="">None / Direct Purchase</option>
+                <option>Karim Traders</option>
+                <option>Rahman Wholesale</option>
+                <option>City Distributors</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <textarea class="form-textarea" placeholder="e.g. Market price increased due to season"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Sell Price Update -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">3 · Update Sell Price?</div></div>
+        <div class="form-card-body">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Update sell price</div>
+              <div class="toggle-sub">Current sell price: ৳80/kg</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="updateSellToggle" onchange="toggleSellPrice()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="sellPriceField" style="display:none;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">New Sell Price</label>
+              <div class="prefix-input">
+                <span>৳</span>
+                <input class="form-input" type="number" placeholder="80" id="newSellPrice" oninput="calcNewProfit()">
+              </div>
+              <div class="form-hint" id="newProfitHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Cash Deduction -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">4 · Payment & Cash Reserve</div></div>
+        <div class="form-card-body">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Deduct from Cash Reserve</div>
+              <div class="toggle-sub" id="reserveBalanceHint">Current reserve: ৳1,15,400</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="deductToggle" onchange="toggleDeduct()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="paymentMethod">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" onchange="handlePaymentMethod(this.value)">
+                <option value="cash">Cash (from reserve)</option>
+                <option value="bkash">bKash</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="credit">Supplier Credit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-save-full" onclick="addStock()">Add Stock</button>
+      <div style="text-align:center;margin-top:12px;font-size:0.82rem;color:var(--text-3);cursor:pointer;" onclick="switchTab('history')">Cancel</div>
+
+    </div><!-- /addTab -->
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item active" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<script>
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('active');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('active');});
+
+// Set today's date
+document.getElementById('purchaseDate').value = new Date().toISOString().split('T')[0];
+
+function switchTab(tab) {
+  const isHistory = tab === 'history';
+  document.getElementById('tab-history').classList.toggle('active', isHistory);
+  document.getElementById('tab-add').classList.toggle('active', !isHistory);
+  document.getElementById('historyTab').style.display = isHistory ? 'flex' : 'none';
+  document.getElementById('addTab').classList.toggle('active', !isHistory);
+  document.getElementById('addTab').style.display = isHistory ? 'none' : 'block';
+}
+// Init: show add tab
+switchTab('add');
+
+function searchProduct(val) {
+  const confirm = document.getElementById('productConfirm');
+  confirm.classList.toggle('visible', val.length > 0);
+}
+function selectProduct(name) {
+  document.getElementById('productSearch').value = name;
+  document.getElementById('productConfirm').classList.add('visible');
+  document.querySelector('.product-confirm-name').textContent = '✓ ' + name;
+}
+function calcCostPerUnit() {
+  const qty = parseFloat(document.getElementById('qtyInput').value)||0;
+  const cost = parseFloat(document.getElementById('costInput').value)||0;
+  const hint = document.getElementById('perUnitHint');
+  if(qty>0&&cost>0){
+    const per = (cost/qty).toFixed(2);
+    hint.textContent = `৳${per}/kg · Last time: ৳62/kg`;
+    hint.className = 'form-hint info';
+  } else { hint.textContent=''; }
+}
+function toggleSellPrice() {
+  const show = document.getElementById('updateSellToggle').checked;
+  document.getElementById('sellPriceField').style.display = show ? 'block' : 'none';
+}
+function calcNewProfit() {
+  const sell = parseFloat(document.getElementById('newSellPrice').value)||0;
+  const qty = parseFloat(document.getElementById('qtyInput').value)||0;
+  const cost = parseFloat(document.getElementById('costInput').value)||0;
+  const hint = document.getElementById('newProfitHint');
+  if(sell>0&&qty>0&&cost>0){
+    const buy=cost/qty;
+    const profit=sell-buy;
+    const pct=((profit/buy)*100).toFixed(1);
+    hint.textContent=profit>=0?`Profit: ৳${profit.toFixed(2)}/kg (${pct}%)`:`Loss: ৳${Math.abs(profit).toFixed(2)}/kg`;
+    hint.className=profit>=0?'form-hint profit-hint':'form-hint loss-hint';
+  }
+}
+function toggleDeduct() {
+  const checked = document.getElementById('deductToggle').checked;
+  document.getElementById('paymentMethod').style.display = checked ? 'block' : 'none';
+}
+function handlePaymentMethod(val) {
+  if(val==='credit') {
+    document.getElementById('reserveBalanceHint').textContent='Will add to supplier outstanding balance';
+  } else {
+    document.getElementById('reserveBalanceHint').textContent='Current reserve: ৳1,15,400';
+  }
+}
+function addStock() {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1F6B45;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:500;white-space:nowrap;';
+  t.textContent='✓ Stock added successfully';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+  switchTab('history');
+}
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Stock Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F5F4F0;--surface:#FFFFFF;--surface-2:#EEECEA;--border:#E0DDD6;
+  --text-1:#18170F;--text-2:#65625A;--text-3:#A09D96;
+  --gold:#C49A3C;--gold-bg:#FBF4E5;--green:#1F6B45;--green-bg:#E6F3EC;
+  --red:#B83232;--red-bg:#FAE8E8;--blue:#1E4FAD;--blue-bg:#E8EFFA;
+  --sidebar:#111010;--sidebar-text:#C8C5BC;--sidebar-muted:#6B6862;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;display:flex;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-header{padding:24px 16px 20px;border-bottom:1px solid #1E1D1D;display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-box svg{width:20px;height:20px;}
+.sidebar-name{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;color:#fff;}
+.sidebar-sub{font-size:0.7rem;color:var(--sidebar-muted);letter-spacing:0.05em;text-transform:uppercase;}
+.sidebar-nav{flex:1;padding:16px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:0.65rem;font-weight:600;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:0.88rem;color:var(--sidebar-text);text-decoration:none;cursor:pointer;transition:background 0.15s,color 0.15s;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:#1E1D1D;color:#fff;}
+.nav-item.active{background:rgba(196,154,60,0.12);color:var(--gold);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;font-weight:600;padding:2px 6px;border-radius:20px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid #1E1D1D;}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.user-card:hover{background:#1E1D1D;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:0.85rem;font-weight:500;color:#fff;}
+.user-role{font-size:0.7rem;color:var(--sidebar-muted);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:150;}
+.overlay.active{display:block;}
+.main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.hamburger{display:none;width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
+.hamburger svg{width:18px;height:18px;}
+.topbar-title-area{flex:1;}
+.topbar-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.1rem;color:var(--text-1);}
+.topbar-sub{font-size:0.75rem;color:var(--text-3);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;}
+.icon-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.icon-btn:hover{background:var(--surface-2);}
+.icon-btn svg{width:18px;height:18px;color:var(--text-2);}
+.page-content{padding:24px;flex:1;}
+
+/* Alert Banner */
+.alert-banner{background:var(--red-bg);border:1px solid #F0C0C0;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;}
+.alert-banner svg{width:18px;height:18px;color:var(--red);flex-shrink:0;margin-top:1px;}
+.alert-body{flex:1;}
+.alert-title{font-size:0.88rem;font-weight:600;color:var(--red);}
+.alert-items{font-size:0.78rem;color:var(--text-2);margin-top:2px;}
+.alert-link{font-size:0.78rem;color:var(--red);font-weight:600;text-decoration:underline;cursor:pointer;margin-top:4px;display:inline-block;}
+
+/* Tabs */
+.tab-bar{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px;margin-bottom:20px;}
+.tab-btn{flex:1;height:40px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:500;color:var(--text-3);cursor:pointer;background:transparent;transition:all 0.15s;}
+.tab-btn.active{background:var(--text-1);color:#fff;font-weight:600;}
+
+/* History List */
+.history-list{display:flex;flex-direction:column;gap:10px;}
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;}
+.history-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);border-color:#D0CCC4;}
+.history-card.expanded{}
+.h-meta{font-size:0.75rem;color:var(--text-3);margin-bottom:6px;}
+.h-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.h-product{font-size:0.9rem;font-weight:600;color:var(--text-1);}
+.h-qty{font-size:0.85rem;font-weight:600;color:var(--green);}
+.h-detail{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.h-detail-item{font-size:0.78rem;color:var(--text-2);}
+.h-detail-item span{color:var(--text-1);font-weight:500;}
+.h-expand{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.history-card.expanded .h-expand{display:block;}
+.h-expand-row{display:flex;justify-content:space-between;padding:5px 0;font-size:0.8rem;border-bottom:1px solid var(--border);}
+.h-expand-row:last-child{border:none;}
+.h-expand-label{color:var(--text-3);}
+.h-expand-val{color:var(--text-1);font-weight:500;}
+
+/* Add Stock Form */
+.add-stock-form{display:none;}
+.add-stock-form.active{display:block;}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.form-card-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.form-card-title{font-size:0.78rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
+.form-card-body{padding:18px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.req{color:var(--red);}
+.form-input,.form-select,.form-textarea{width:100%;height:42px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);outline:none;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);}
+.form-select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A09D96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.form-textarea{height:auto;padding:10px 12px;min-height:68px;resize:vertical;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:0.72rem;color:var(--text-3);margin-top:4px;}
+.form-hint.info{color:var(--blue);}
+.form-hint.warn{color:#C07028;}
+.prefix-input{position:relative;}
+.prefix-input span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.85rem;color:var(--text-3);}
+.prefix-input .form-input{padding-left:24px;}
+.product-confirm{background:var(--green-bg);border:1px solid #A8D5BC;border-radius:8px;padding:10px 14px;margin-top:8px;display:none;}
+.product-confirm.visible{display:block;}
+.product-confirm-name{font-size:0.88rem;font-weight:600;color:var(--green);}
+.product-confirm-meta{font-size:0.72rem;color:var(--text-2);margin-top:2px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;}
+.toggle-label{font-size:0.88rem;font-weight:500;color:var(--text-1);}
+.toggle-sub{font-size:0.72rem;color:var(--text-3);margin-top:2px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:background 0.2s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.toggle input:checked+.toggle-slider{background:var(--gold);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
+.deduct-info{background:var(--surface-2);border-radius:8px;padding:10px 14px;font-size:0.78rem;color:var(--text-2);margin-top:8px;}
+.btn-save-full{width:100%;height:52px;background:var(--text-1);color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:0.92rem;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.btn-save-full:hover{opacity:0.85;}
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.quick-chip{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-size:0.78rem;font-weight:500;color:var(--text-2);cursor:pointer;transition:all 0.15s;}
+.quick-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg);}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--border);z-index:100;}
+.bottom-nav-inner{display:flex;align-items:center;height:68px;padding:0 4px;}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--text-3);font-size:0.65rem;font-weight:500;padding:4px;transition:color 0.15s;}
+.bottom-nav-item.active{color:var(--gold);}
+.bottom-nav-item svg{width:20px;height:20px;}
+.bottom-nav-sell{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;background:var(--text-1);color:#fff;font-size:0.7rem;font-weight:600;border-radius:14px;margin:8px 4px;padding:4px;height:calc(100% - 16px);}
+.bottom-nav-sell svg{width:22px;height:22px;}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .page-content{padding:16px;padding-bottom:84px;}
+  .bottom-nav{display:block;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item active" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Stock Management</div>
+      <div class="topbar-sub">Inventory control & purchase history</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="Filter" onclick="alert('Filter by date/supplier/product')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Low Stock Alert -->
+    <div class="alert-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="alert-body">
+        <div class="alert-title">4 products need restocking</div>
+        <div class="alert-items">Mustard Oil (3.5 L), Turmeric Powder (0 kg), Green Lentils (1.5 kg), Cumin Seeds (200 gm)</div>
+        <span class="alert-link" onclick="switchTab('history')">View All →</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn" id="tab-history" onclick="switchTab('history')">📋 Purchase History</button>
+      <button class="tab-btn active" id="tab-add" onclick="switchTab('add')">➕ Add Stock</button>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="historyTab" class="history-list" style="display:none;">
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">28 May 2026 · 9:14 AM</div>
+        <div class="h-row">
+          <div class="h-product">🌾 Basmati Rice</div>
+          <div class="h-qty">+50 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,250</span></div>
+          <div class="h-detail-item">Supplier: <span>Karim Traders</span></div>
+          <div class="h-detail-item">Buy price: <span>৳65/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳3,250</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Per unit cost</span><span class="h-expand-val">৳65/kg</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Last buy price</span><span class="h-expand-val">৳62/kg (+4.8%)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Sell price updated</span><span class="h-expand-val">৳80/kg (unchanged)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash (deducted from reserve)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Lot number</span><span class="h-expand-val">LOT-2026-05-A</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">27 May 2026 · 2:30 PM</div>
+        <div class="h-row">
+          <div class="h-product">🛢️ Mustard Oil</div>
+          <div class="h-qty">+20 L added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,100</span></div>
+          <div class="h-detail-item">Supplier: <span>Rahman Wholesale</span></div>
+          <div class="h-detail-item">Buy price: <span>৳155/L</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳3,100</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Per unit cost</span><span class="h-expand-val">৳155/L</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">bKash</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">26 May 2026 · 10:00 AM</div>
+        <div class="h-row">
+          <div class="h-product">🫙 Turmeric Powder</div>
+          <div class="h-qty">+5 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳1,100</span></div>
+          <div class="h-detail-item">Supplier: <span>City Distributors</span></div>
+          <div class="h-detail-item">Buy price: <span>৳220/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Total cost paid</span><span class="h-expand-val">৳1,100</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Sell price updated</span><span class="h-expand-val">৳260/kg (was ৳250/kg)</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash</span></div>
+        </div>
+      </div>
+
+      <div class="history-card" onclick="this.classList.toggle('expanded')">
+        <div class="h-meta">25 May 2026 · 8:45 AM</div>
+        <div class="h-row">
+          <div class="h-product">🧅 Onion</div>
+          <div class="h-qty">+100 kg added</div>
+        </div>
+        <div class="h-detail">
+          <div class="h-detail-item">Cost: <span>৳3,500</span></div>
+          <div class="h-detail-item">Supplier: <span>Direct Purchase</span></div>
+          <div class="h-detail-item">Buy price: <span>৳35/kg</span></div>
+        </div>
+        <div class="h-expand">
+          <div class="h-expand-row"><span class="h-expand-label">Notes</span><span class="h-expand-val">Market price stable</span></div>
+          <div class="h-expand-row"><span class="h-expand-label">Payment method</span><span class="h-expand-val">Cash</span></div>
+        </div>
+      </div>
+
+    </div><!-- /historyTab -->
+
+    <!-- ADD STOCK TAB -->
+    <div id="addTab" class="add-stock-form active">
+
+      <!-- Section 1: Product -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">1 · Select Product</div></div>
+        <div class="form-card-body">
+          <div class="form-group">
+            <label class="form-label">Search Product <span class="req">*</span></label>
+            <input class="form-input" type="text" id="productSearch" placeholder="Search product to add stock..." oninput="searchProduct(this.value)">
+            <div class="product-confirm visible" id="productConfirm">
+              <div class="product-confirm-name">✓ Basmati Rice (Premium)</div>
+              <div class="product-confirm-meta">Rice & Flour · per kg · Current stock: 50 kg</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Recent Products</label>
+            <div class="quick-chips">
+              <span class="quick-chip" onclick="selectProduct('Basmati Rice')">🌾 Basmati Rice</span>
+              <span class="quick-chip" onclick="selectProduct('Mustard Oil')">🛢️ Mustard Oil</span>
+              <span class="quick-chip" onclick="selectProduct('Onion')">🧅 Onion</span>
+              <span class="quick-chip" onclick="selectProduct('Turmeric Powder')">🫙 Turmeric</span>
+              <span class="quick-chip" onclick="selectProduct('Sugar')">🧂 Sugar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Purchase Details -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">2 · Purchase Details</div></div>
+        <div class="form-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity Purchased <span class="req">*</span></label>
+              <div style="position:relative;">
+                <input class="form-input" type="number" id="qtyInput" placeholder="0" style="padding-right:44px;" oninput="calcCostPerUnit()">
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:0.78rem;color:var(--text-3);">kg</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Cost Paid <span class="req">*</span></label>
+              <div class="prefix-input">
+                <span>৳</span>
+                <input class="form-input" type="number" id="costInput" placeholder="0" oninput="calcCostPerUnit()">
+              </div>
+              <div class="form-hint" id="perUnitHint"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Purchase Date</label>
+              <input class="form-input" type="date" id="purchaseDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Supplier</label>
+              <select class="form-select">
+                <option value="">None / Direct Purchase</option>
+                <option>Karim Traders</option>
+                <option>Rahman Wholesale</option>
+                <option>City Distributors</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <textarea class="form-textarea" placeholder="e.g. Market price increased due to season"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Sell Price Update -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">3 · Update Sell Price?</div></div>
+        <div class="form-card-body">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Update sell price</div>
+              <div class="toggle-sub">Current sell price: ৳80/kg</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="updateSellToggle" onchange="toggleSellPrice()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="sellPriceField" style="display:none;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">New Sell Price</label>
+              <div class="prefix-input">
+                <span>৳</span>
+                <input class="form-input" type="number" placeholder="80" id="newSellPrice" oninput="calcNewProfit()">
+              </div>
+              <div class="form-hint" id="newProfitHint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Cash Deduction -->
+      <div class="form-card">
+        <div class="form-card-header"><div class="form-card-title">4 · Payment & Cash Reserve</div></div>
+        <div class="form-card-body">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Deduct from Cash Reserve</div>
+              <div class="toggle-sub" id="reserveBalanceHint">Current reserve: ৳1,15,400</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="deductToggle" onchange="toggleDeduct()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="paymentMethod">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" onchange="handlePaymentMethod(this.value)">
+                <option value="cash">Cash (from reserve)</option>
+                <option value="bkash">bKash</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="credit">Supplier Credit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-save-full" onclick="addStock()">Add Stock</button>
+      <div style="text-align:center;margin-top:12px;font-size:0.82rem;color:var(--text-3);cursor:pointer;" onclick="switchTab('history')">Cancel</div>
+
+    </div><!-- /addTab -->
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item active" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<script>
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('active');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('active');});
+
+// Set today's date
+document.getElementById('purchaseDate').value = new Date().toISOString().split('T')[0];
+
+function switchTab(tab) {
+  const isHistory = tab === 'history';
+  document.getElementById('tab-history').classList.toggle('active', isHistory);
+  document.getElementById('tab-add').classList.toggle('active', !isHistory);
+  document.getElementById('historyTab').style.display = isHistory ? 'flex' : 'none';
+  document.getElementById('addTab').classList.toggle('active', !isHistory);
+  document.getElementById('addTab').style.display = isHistory ? 'none' : 'block';
+}
+// Init: show add tab
+switchTab('add');
+
+function searchProduct(val) {
+  const confirm = document.getElementById('productConfirm');
+  confirm.classList.toggle('visible', val.length > 0);
+}
+function selectProduct(name) {
+  document.getElementById('productSearch').value = name;
+  document.getElementById('productConfirm').classList.add('visible');
+  document.querySelector('.product-confirm-name').textContent = '✓ ' + name;
+}
+function calcCostPerUnit() {
+  const qty = parseFloat(document.getElementById('qtyInput').value)||0;
+  const cost = parseFloat(document.getElementById('costInput').value)||0;
+  const hint = document.getElementById('perUnitHint');
+  if(qty>0&&cost>0){
+    const per = (cost/qty).toFixed(2);
+    hint.textContent = `৳${per}/kg · Last time: ৳62/kg`;
+    hint.className = 'form-hint info';
+  } else { hint.textContent=''; }
+}
+function toggleSellPrice() {
+  const show = document.getElementById('updateSellToggle').checked;
+  document.getElementById('sellPriceField').style.display = show ? 'block' : 'none';
+}
+function calcNewProfit() {
+  const sell = parseFloat(document.getElementById('newSellPrice').value)||0;
+  const qty = parseFloat(document.getElementById('qtyInput').value)||0;
+  const cost = parseFloat(document.getElementById('costInput').value)||0;
+  const hint = document.getElementById('newProfitHint');
+  if(sell>0&&qty>0&&cost>0){
+    const buy=cost/qty;
+    const profit=sell-buy;
+    const pct=((profit/buy)*100).toFixed(1);
+    hint.textContent=profit>=0?`Profit: ৳${profit.toFixed(2)}/kg (${pct}%)`:`Loss: ৳${Math.abs(profit).toFixed(2)}/kg`;
+    hint.className=profit>=0?'form-hint profit-hint':'form-hint loss-hint';
+  }
+}
+function toggleDeduct() {
+  const checked = document.getElementById('deductToggle').checked;
+  document.getElementById('paymentMethod').style.display = checked ? 'block' : 'none';
+}
+function handlePaymentMethod(val) {
+  if(val==='credit') {
+    document.getElementById('reserveBalanceHint').textContent='Will add to supplier outstanding balance';
+  } else {
+    document.getElementById('reserveBalanceHint').textContent='Current reserve: ৳1,15,400';
+  }
+}
+function addStock() {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1F6B45;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:500;white-space:nowrap;';
+  t.textContent='✓ Stock added successfully';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+  switchTab('history');
+}
+</script>
+</body>
+</html>

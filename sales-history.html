@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Sales History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F4F0;--surface:#FFFFFF;--surface-2:#EEECEA;--border:#E0DDD6;--text-1:#18170F;--text-2:#65625A;--text-3:#A09D96;--gold:#C49A3C;--gold-bg:#FBF4E5;--green:#1F6B45;--green-bg:#E6F3EC;--red:#B83232;--red-bg:#FAE8E8;--blue:#1E4FAD;--blue-bg:#E8EFFA;--sidebar:#111010;--sidebar-text:#C8C5BC;--sidebar-muted:#6B6862;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;display:flex;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-header{padding:24px 16px 20px;border-bottom:1px solid #1E1D1D;display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-box svg{width:20px;height:20px;}
+.sidebar-name{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;color:#fff;}
+.sidebar-sub{font-size:0.7rem;color:var(--sidebar-muted);letter-spacing:0.05em;text-transform:uppercase;}
+.sidebar-nav{flex:1;padding:16px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:0.65rem;font-weight:600;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:0.88rem;color:var(--sidebar-text);text-decoration:none;cursor:pointer;transition:background 0.15s,color 0.15s;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:#1E1D1D;color:#fff;}
+.nav-item.active{background:rgba(196,154,60,0.12);color:var(--gold);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid #1E1D1D;}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.user-card:hover{background:#1E1D1D;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:0.85rem;font-weight:500;color:#fff;}
+.user-role{font-size:0.7rem;color:var(--sidebar-muted);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:150;}
+.overlay.active{display:block;}
+.main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.hamburger{display:none;width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
+.hamburger svg{width:18px;height:18px;}
+.topbar-title-area{flex:1;}
+.topbar-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.1rem;color:var(--text-1);}
+.topbar-sub{font-size:0.75rem;color:var(--text-3);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;}
+.icon-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.icon-btn:hover{background:var(--surface-2);}
+.icon-btn svg{width:18px;height:18px;color:var(--text-2);}
+.page-content{padding:24px;flex:1;}
+
+/* Summary chips */
+.summary-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none;}
+.summary-row::-webkit-scrollbar{display:none;}
+.summary-chip{flex-shrink:0;padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.summary-chip.active{background:var(--text-1);border-color:var(--text-1);}
+.summary-chip.active .sc-label{color:#fff;}
+.summary-chip.active .sc-val{color:rgba(255,255,255,0.7);}
+.sc-label{font-size:0.78rem;font-weight:600;color:var(--text-1);}
+.sc-val{font-size:0.72rem;color:var(--text-3);margin-top:1px;}
+
+/* Search bar */
+.search-bar{display:flex;gap:10px;margin-bottom:18px;}
+.search-wrap{flex:1;position:relative;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3);}
+.search-input{width:100%;height:42px;padding:0 12px 0 38px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--gold);}
+.search-input::placeholder{color:var(--text-3);}
+.filter-btn{display:flex;align-items:center;gap:6px;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.82rem;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.filter-btn:hover{border-color:var(--gold);color:var(--gold);}
+.filter-btn svg{width:15px;height:15px;}
+
+/* Date group */
+.date-group{margin-bottom:20px;}
+.date-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.date-line{flex:1;height:1px;background:var(--border);}
+.date-label{font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.date-summary{font-size:0.72rem;color:var(--text-3);white-space:nowrap;}
+
+/* Sale Row */
+.sale-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s;}
+.sale-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);border-color:#D0CCC4;}
+.sale-row{display:flex;align-items:center;gap:12px;padding:12px 16px;}
+.sale-num{width:36px;height:36px;background:var(--surface-2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;color:var(--text-2);flex-shrink:0;}
+.sale-info{flex:1;min-width:0;}
+.sale-products{font-size:0.85rem;font-weight:500;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sale-time{font-size:0.7rem;color:var(--text-3);margin-top:2px;}
+.sale-right{text-align:right;flex-shrink:0;}
+.sale-amount{font-size:0.9rem;font-weight:600;color:var(--text-1);}
+.sale-badges{display:flex;gap:5px;justify-content:flex-end;margin-top:4px;}
+.badge{font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:20px;}
+.badge.cash{background:var(--green-bg);color:var(--green);}
+.badge.bkash{background:var(--blue-bg);color:var(--blue);}
+.badge.due{background:var(--gold-bg);color:var(--gold);}
+.badge.refund{background:var(--red-bg);color:var(--red);}
+
+/* Detail Drawer */
+.detail-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:300;}
+.detail-backdrop.open{display:block;}
+.detail-drawer{position:fixed;top:0;right:-100%;width:100%;max-width:440px;height:100vh;background:var(--surface);z-index:310;display:flex;flex-direction:column;transition:right 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.12);}
+.detail-drawer.open{right:0;}
+.detail-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.detail-close{width:34px;height:34px;border:none;background:var(--surface-2);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.detail-close svg{width:16px;height:16px;}
+.detail-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;}
+.detail-meta{font-size:0.75rem;color:var(--text-3);}
+.detail-body{flex:1;overflow-y:auto;padding:20px;}
+.detail-section{margin-bottom:20px;}
+.detail-section-label{font-size:0.7rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.item-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.item-row:last-child{border:none;}
+.item-name{flex:1;font-size:0.85rem;color:var(--text-1);}
+.item-qty{font-size:0.8rem;color:var(--text-3);width:70px;}
+.item-price{font-size:0.85rem;font-weight:600;color:var(--text-1);text-align:right;width:70px;}
+.totals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:0.85rem;border-bottom:1px solid var(--border);}
+.totals-row:last-child{border:none;}
+.totals-row.grand{font-weight:700;font-size:0.95rem;padding-top:10px;}
+.totals-row .label{color:var(--text-2);}
+.totals-row .val{color:var(--text-1);}
+.totals-row.grand .val{color:var(--text-1);font-family:'Playfair Display',serif;}
+.profit-box{background:var(--green-bg);border:1px solid #A8D5BC;border-radius:10px;padding:12px 16px;margin-top:14px;}
+.profit-box-label{font-size:0.7rem;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.06em;}
+.profit-box-val{font-size:1.1rem;font-weight:700;color:var(--green);margin-top:4px;}
+.detail-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;}
+.btn-detail{flex:1;height:42px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-detail.outline{background:transparent;border:1px solid var(--border);color:var(--text-2);}
+.btn-detail.outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-detail.red{background:var(--red-bg);border:1px solid #F0C0C0;color:var(--red);}
+.btn-detail.dark{background:var(--text-1);border:none;color:#fff;}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--border);z-index:100;}
+.bottom-nav-inner{display:flex;align-items:center;height:68px;padding:0 4px;}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--text-3);font-size:0.65rem;font-weight:500;padding:4px;transition:color 0.15s;}
+.bottom-nav-item.active{color:var(--gold);}
+.bottom-nav-item svg{width:20px;height:20px;}
+.bottom-nav-sell{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;background:var(--text-1);color:#fff;font-size:0.7rem;font-weight:600;border-radius:14px;margin:8px 4px;padding:4px;height:calc(100% - 16px);}
+.bottom-nav-sell svg{width:22px;height:22px;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.page-content{padding:16px;padding-bottom:84px}.bottom-nav{display:block}.detail-drawer{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item active" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Sales History</div>
+      <div class="topbar-sub">Complete transaction ledger</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="Export" onclick="alert('Export as PDF or CSV')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <button class="icon-btn" title="Filter" onclick="alert('Filter options')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Summary Chips -->
+    <div class="summary-row">
+      <div class="summary-chip active" onclick="selectChip(this)">
+        <div class="sc-label">Today: ৳24,850</div>
+        <div class="sc-val">28 sales</div>
+      </div>
+      <div class="summary-chip" onclick="selectChip(this)">
+        <div class="sc-label">This Week: ৳1,42,300</div>
+        <div class="sc-val">194 sales</div>
+      </div>
+      <div class="summary-chip" onclick="selectChip(this)">
+        <div class="sc-label">This Month: ৳5,84,200</div>
+        <div class="sc-val">812 sales</div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" placeholder="Search by product, sale #, or customer...">
+      </div>
+      <button class="filter-btn" onclick="alert('Filter sheet')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter
+      </button>
+    </div>
+
+    <!-- Date Group: Today -->
+    <div class="date-group">
+      <div class="date-header">
+        <div class="date-label">Friday, 30 May 2026</div>
+        <div class="date-line"></div>
+        <div class="date-summary">28 sales · ৳24,850</div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(28)">
+        <div class="sale-row">
+          <div class="sale-num">#28</div>
+          <div class="sale-info">
+            <div class="sale-products">Basmati Rice, Mustard Oil, Onion...</div>
+            <div class="sale-time">2:34 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳390</div>
+            <div class="sale-badges"><span class="badge cash">Cash</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(27)">
+        <div class="sale-row">
+          <div class="sale-num">#27</div>
+          <div class="sale-info">
+            <div class="sale-products">Green Lentils, Salt, Cumin</div>
+            <div class="sale-time">1:58 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳320</div>
+            <div class="sale-badges"><span class="badge cash">Cash</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(26)">
+        <div class="sale-row">
+          <div class="sale-num">#26</div>
+          <div class="sale-info">
+            <div class="sale-products">Wheat Flour, Turmeric Powder +2 more</div>
+            <div class="sale-time">1:12 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳1,240</div>
+            <div class="sale-badges"><span class="badge bkash">bKash</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(25)">
+        <div class="sale-row">
+          <div class="sale-num">#25</div>
+          <div class="sale-info">
+            <div class="sale-products">Mustard Oil (2 L)</div>
+            <div class="sale-time">12:30 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳360</div>
+            <div class="sale-badges"><span class="badge due">Due</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Group: Yesterday -->
+    <div class="date-group">
+      <div class="date-header">
+        <div class="date-label">Thursday, 29 May 2026</div>
+        <div class="date-line"></div>
+        <div class="date-summary">32 sales · ৳28,400</div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(24)">
+        <div class="sale-row">
+          <div class="sale-num">#24</div>
+          <div class="sale-info">
+            <div class="sale-products">Basmati Rice (5 kg), Sugar, Salt</div>
+            <div class="sale-time">4:22 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳690</div>
+            <div class="sale-badges"><span class="badge cash">Cash</span><span class="badge refund">↩ Refunded</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(23)">
+        <div class="sale-row">
+          <div class="sale-num">#23</div>
+          <div class="sale-info">
+            <div class="sale-products">Onion, Tomato, Green Chilli +3 more</div>
+            <div class="sale-time">3:01 PM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳840</div>
+            <div class="sale-badges"><span class="badge cash">Cash</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sale-card" onclick="openDetail(22)">
+        <div class="sale-row">
+          <div class="sale-num">#22</div>
+          <div class="sale-info">
+            <div class="sale-products">Cooking Oil, Spice Mix, Flour</div>
+            <div class="sale-time">11:40 AM · Rahim Mia</div>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">৳1,550</div>
+            <div class="sale-badges"><span class="badge bkash">bKash</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item active" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<!-- Sale Detail Drawer -->
+<div class="detail-backdrop" id="detailBackdrop" onclick="closeDetail()"></div>
+<div class="detail-drawer" id="detailDrawer">
+  <div class="detail-header">
+    <button class="detail-close" onclick="closeDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div>
+      <div class="detail-title" id="detailTitle">Sale #00028</div>
+      <div class="detail-meta">Friday, 30 May 2026 · 2:34 PM · Rahim Mia</div>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-section">
+      <div class="detail-section-label">Items Purchased</div>
+      <div class="item-row"><div class="item-name">Basmati Rice</div><div class="item-qty">2 kg</div><div class="item-price">৳160</div></div>
+      <div class="item-row"><div class="item-name">Mustard Oil</div><div class="item-qty">1 L</div><div class="item-price">৳180</div></div>
+      <div class="item-row"><div class="item-name">Onion</div><div class="item-qty">500 gm</div><div class="item-price">৳40</div></div>
+      <div class="item-row"><div class="item-name">Salt</div><div class="item-qty">1 kg</div><div class="item-price">৳35</div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label">Bill Summary</div>
+      <div class="totals-row"><span class="label">Subtotal</span><span class="val">৳415</span></div>
+      <div class="totals-row"><span class="label">Discount</span><span class="val" style="color:var(--red);">−৳25</span></div>
+      <div class="totals-row grand"><span class="label">Total Paid</span><span class="val">৳390</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label">Payment Details</div>
+      <div class="totals-row"><span class="label">Method</span><span class="val">Cash</span></div>
+      <div class="totals-row"><span class="label">Amount Paid</span><span class="val">৳500 (1×৳500)</span></div>
+      <div class="totals-row"><span class="label">Change Given</span><span class="val">৳110 (1×৳100 + 1×৳10)</span></div>
+    </div>
+    <div class="profit-box">
+      <div class="profit-box-label">Owner View — Profit This Sale</div>
+      <div class="profit-box-val">৳88 (22.6% margin)</div>
+    </div>
+  </div>
+  <div class="detail-footer">
+    <button class="btn-detail outline" onclick="alert('Print/Share receipt')">🧾 Receipt</button>
+    <button class="btn-detail outline" onclick="alert('Process refund')">↩ Refund</button>
+    <button class="btn-detail red" onclick="alert('Delete sale? This cannot be undone.')">🗑 Delete</button>
+  </div>
+</div>
+
+<script>
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('active');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('active');});
+function selectChip(el){document.querySelectorAll('.summary-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+function openDetail(num){
+  document.getElementById('detailTitle').textContent='Sale #000'+num;
+  document.getElementById('detailBackdrop').classList.add('open');
+  document.getElementById('detailDrawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDetail(){
+  document.getElementById('detailBackdrop').classList.remove('open');
+  document.getElementById('detailDrawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+</script>
+</body>
+</html>

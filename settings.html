@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F4F0;--surface:#FFFFFF;--surface-2:#EEECEA;--border:#E0DDD6;--text-1:#18170F;--text-2:#65625A;--text-3:#A09D96;--gold:#C49A3C;--gold-bg:#FBF4E5;--green:#1F6B45;--green-bg:#E6F3EC;--red:#B83232;--red-bg:#FAE8E8;--blue:#1E4FAD;--blue-bg:#E8EFFA;--sidebar:#111010;--sidebar-text:#C8C5BC;--sidebar-muted:#6B6862;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;display:flex;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-header{padding:24px 16px 20px;border-bottom:1px solid #1E1D1D;display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-box svg{width:20px;height:20px;}
+.sidebar-name{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;color:#fff;}
+.sidebar-sub{font-size:0.7rem;color:var(--sidebar-muted);letter-spacing:0.05em;text-transform:uppercase;}
+.sidebar-nav{flex:1;padding:16px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:0.65rem;font-weight:600;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:0.88rem;color:var(--sidebar-text);text-decoration:none;cursor:pointer;transition:background 0.15s,color 0.15s;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:#1E1D1D;color:#fff;}
+.nav-item.active{background:rgba(196,154,60,0.12);color:var(--gold);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;font-weight:600;padding:2px 6px;border-radius:20px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid #1E1D1D;}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.user-card:hover{background:#1E1D1D;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:0.85rem;font-weight:500;color:#fff;}
+.user-role{font-size:0.7rem;color:var(--sidebar-muted);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:150;}
+.overlay.active{display:block;}
+.main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.hamburger{display:none;width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
+.hamburger svg{width:18px;height:18px;}
+.topbar-title-area{flex:1;}
+.topbar-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.1rem;color:var(--text-1);}
+.page-content{padding:24px;flex:1;max-width:640px;}
+
+/* Settings Sections */
+.settings-section{margin-bottom:28px;}
+.section-label{font-size:0.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;padding:0 4px;margin-bottom:8px;}
+.settings-group{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+
+/* Rows */
+.settings-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;position:relative;}
+.settings-row:last-child{border-bottom:none;}
+.settings-row:hover{background:#FAFAF8;}
+.settings-row.no-hover{cursor:default;}
+.settings-row.no-hover:hover{background:transparent;}
+.row-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.row-icon svg{width:16px;height:16px;}
+.row-body{flex:1;min-width:0;}
+.row-label{font-size:0.88rem;font-weight:500;color:var(--text-1);}
+.row-sub{font-size:0.72rem;color:var(--text-3);margin-top:2px;}
+.row-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.row-value{font-size:0.82rem;color:var(--text-3);}
+.row-chevron{color:var(--text-3);}
+.row-chevron svg{width:14px;height:14px;}
+
+/* Toggle */
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:background 0.2s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.toggle input:checked+.toggle-slider{background:var(--gold);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
+
+/* Change button */
+.btn-change{height:30px;padding:0 12px;border:1px solid var(--border);border-radius:7px;background:transparent;font-family:'Outfit',sans-serif;font-size:0.75rem;font-weight:600;color:var(--gold);cursor:pointer;transition:all 0.15s;}
+.btn-change:hover{background:var(--gold-bg);border-color:var(--gold);}
+
+/* Inline input */
+.inline-input{height:36px;padding:0 10px;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);background:var(--surface);outline:none;min-width:0;flex:1;max-width:180px;}
+.inline-input:focus{border-color:var(--gold);}
+.inline-select{height:36px;padding:0 28px 0 10px;border:1px solid var(--border);border-radius:7px;font-family:'Outfit',sans-serif;font-size:0.82rem;color:var(--text-1);background:var(--surface);outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23A09D96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
+.inline-select:focus{border-color:var(--gold);outline:none;}
+
+/* Danger buttons */
+.btn-danger{display:block;width:100%;padding:12px 16px;text-align:left;font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:500;color:var(--red);background:transparent;border:none;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s;}
+.btn-danger:last-child{border-bottom:none;}
+.btn-danger:hover{background:var(--red-bg);}
+
+/* About */
+.about-app{text-align:center;padding:24px 16px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.about-logo{width:56px;height:56px;background:var(--gold);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.about-logo svg{width:28px;height:28px;}
+.about-name{font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem;}
+.about-tagline{font-size:0.75rem;color:var(--text-3);margin-top:4px;}
+.about-version{font-size:0.72rem;color:var(--text-3);margin-top:2px;}
+
+/* Sheet */
+.sheet-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:300;}
+.sheet-backdrop.open{display:block;}
+.sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:400px;background:var(--surface);border-radius:20px 20px 0 0;z-index:310;display:flex;flex-direction:column;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);}
+.sheet.open{transform:translateX(-50%) translateY(0);}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-header{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sheet-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.05rem;}
+.sheet-close{width:32px;height:32px;border:none;background:var(--surface-2);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sheet-close svg{width:16px;height:16px;}
+.sheet-body{padding:20px;}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin:16px 0;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all 0.1s;}
+.pin-dot.filled{background:var(--text-1);border-color:var(--text-1);}
+.pin-dot.gold{background:var(--gold);border-color:var(--gold);}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+.pin-key{height:56px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:500;color:var(--text-1);cursor:pointer;transition:all 0.1s;display:flex;align-items:center;justify-content:center;}
+.pin-key:active{transform:scale(0.95);background:var(--surface-2);}
+.pin-key.action{font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;color:var(--text-3);}
+.pin-step{font-size:0.82rem;color:var(--text-2);text-align:center;margin-bottom:4px;}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--border);z-index:100;}
+.bottom-nav-inner{display:flex;align-items:center;height:68px;padding:0 4px;}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--text-3);font-size:0.65rem;font-weight:500;padding:4px;transition:color 0.15s;}
+.bottom-nav-item.active{color:var(--gold);}
+.bottom-nav-item svg{width:20px;height:20px;}
+.bottom-nav-sell{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;background:var(--text-1);color:#fff;font-size:0.7rem;font-weight:600;border-radius:14px;margin:8px 4px;padding:4px;height:calc(100% - 16px);}
+.bottom-nav-sell svg{width:22px;height:22px;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.page-content{padding:16px;padding-bottom:84px;max-width:100%}.bottom-nav{display:block}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item active" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Settings</div>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Section 1: Shop Profile -->
+    <div class="settings-section">
+      <div class="section-label">Shop Profile</div>
+      <div class="settings-group">
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--gold-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+          <div class="row-body"><div class="row-label">Shop Name</div></div>
+          <div class="row-right"><input class="inline-input" type="text" value="GreenBasket Store"></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--blue-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="row-body"><div class="row-label">Shop Address</div><div class="row-sub">Used on receipts</div></div>
+          <div class="row-right"><input class="inline-input" type="text" value="Mohammadpur, Dhaka"></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--green-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.54 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div class="row-body"><div class="row-label">Phone Number</div></div>
+          <div class="row-right"><input class="inline-input" type="tel" value="01700-000000"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Security -->
+    <div class="settings-section">
+      <div class="section-label">Security & Access</div>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--red-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#B83232" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="row-body"><div class="row-label">Owner PIN</div><div class="row-sub">4-digit security PIN</div></div>
+          <div class="row-right"><button class="btn-change" onclick="openPinSheet('Owner')">Change</button></div>
+        </div>
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="row-body"><div class="row-label">Cashier PIN</div><div class="row-sub">Enable cashier access</div></div>
+          <div class="row-right"><button class="btn-change" onclick="openPinSheet('Cashier')">Change</button><label class="toggle" style="margin-left:6px;"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--gold-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="row-body"><div class="row-label">Auto-Lock Timeout</div></div>
+          <div class="row-right"><select class="inline-select"><option>1 min</option><option selected>5 min</option><option>15 min</option><option>30 min</option><option>Never</option></select></div>
+        </div>
+        <div class="settings-row" onclick="alert('Activity log coming soon')">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div>
+          <div class="row-body"><div class="row-label">View Activity Log</div><div class="row-sub">Login history, edits, deletions</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Sales & Pricing -->
+    <div class="settings-section">
+      <div class="section-label">Sales & Pricing</div>
+      <div class="settings-group">
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--green-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="row-body"><div class="row-label">Currency Symbol</div></div>
+          <div class="row-right"><input class="inline-input" type="text" value="৳" style="max-width:60px;text-align:center;"></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="row-body"><div class="row-label">Price Rounding</div><div class="row-sub">Round sale totals</div></div>
+          <div class="row-right"><select class="inline-select"><option>No rounding</option><option>৳1</option><option>৳5</option><option>৳10</option></select></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--blue-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div class="row-body"><div class="row-label">Cashier Max Discount</div></div>
+          <div class="row-right"><input class="inline-input" type="number" value="10" style="max-width:70px;text-align:center;"><span style="font-size:0.85rem;color:var(--text-3);margin-left:4px;">%</span></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="row-body"><div class="row-label">Receipt Footer</div><div class="row-sub">Message shown on receipts</div></div>
+          <div class="row-right"><input class="inline-input" type="text" value="Thank you! Come again." style="max-width:200px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Inventory -->
+    <div class="settings-section">
+      <div class="section-label">Inventory</div>
+      <div class="settings-group">
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--red-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#B83232" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="row-body"><div class="row-label">Low Stock Threshold</div><div class="row-sub">Alert when stock drops below</div></div>
+          <div class="row-right"><input class="inline-input" type="number" value="10" style="max-width:70px;text-align:center;"><span style="font-size:0.82rem;color:var(--text-3);margin-left:4px;">units</span></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+          <div class="row-body"><div class="row-label">Expiry Warning Days</div></div>
+          <div class="row-right"><input class="inline-input" type="number" value="7" style="max-width:70px;text-align:center;"><span style="font-size:0.82rem;color:var(--text-3);margin-left:4px;">days</span></div>
+        </div>
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--green-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="row-body"><div class="row-label">Auto Stock Deduction</div><div class="row-sub">Reduce stock on each sale</div></div>
+          <div class="row-right"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="settings-row no-hover">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+          <div class="row-body"><div class="row-label">Out of Stock Behaviour</div></div>
+          <div class="row-right"><select class="inline-select"><option>Show with warning</option><option>Hide from sell</option><option>Show as disabled</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Appearance -->
+    <div class="settings-section">
+      <div class="section-label">Appearance</div>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg></div>
+          <div class="row-body"><div class="row-label">Theme</div><div class="row-sub">Dark mode coming soon</div></div>
+          <div class="row-right"><select class="inline-select"><option>Light</option><option disabled>Dark (soon)</option></select></div>
+        </div>
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--blue-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg></div>
+          <div class="row-body"><div class="row-label">Language</div><div class="row-sub">বাংলা coming soon</div></div>
+          <div class="row-right"><select class="inline-select"><option>English</option><option disabled>বাংলা (soon)</option></select></div>
+        </div>
+        <div class="settings-row">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
+          <div class="row-body"><div class="row-label">Font Size</div></div>
+          <div class="row-right"><select class="inline-select"><option>Normal</option><option>Large</option><option>Extra Large</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: Backup & Data -->
+    <div class="settings-section">
+      <div class="section-label">Backup & Data</div>
+      <div class="settings-group">
+        <div class="settings-row" onclick="alert('Exporting complete backup as JSON...')">
+          <div class="row-icon" style="background:var(--green-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6B45" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+          <div class="row-body"><div class="row-label">Export Complete Backup</div><div class="row-sub">Download all data as JSON</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="settings-row" onclick="alert('Import backup file')">
+          <div class="row-icon" style="background:var(--blue-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#1E4FAD" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="row-body"><div class="row-label">Import Backup File</div><div class="row-sub">Restore from JSON backup</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="settings-row no-hover" style="cursor:default;">
+          <div class="row-icon" style="background:var(--surface-2);"><svg viewBox="0 0 24 24" fill="none" stroke="#65625A" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="row-body"><div class="row-label">Data Storage</div><div class="row-sub">All data stored locally on this device. No cloud sync.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7: Danger Zone -->
+    <div class="settings-section">
+      <div class="section-label">Danger Zone</div>
+      <div class="settings-group">
+        <button class="btn-danger" onclick="confirmDelete('Clear All Sales History')">🗑 Clear All Sales History</button>
+        <button class="btn-danger" onclick="confirmDelete('Clear All Expenses')">🗑 Clear All Expenses</button>
+        <button class="btn-danger" onclick="confirmDelete('Reset All Products')">🗑 Reset All Products</button>
+        <button class="btn-danger" onclick="confirmDelete('Factory Reset (Clear Everything)')">⚠ Factory Reset — Clear Everything</button>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="settings-section">
+      <div class="section-label">About</div>
+      <div class="about-app">
+        <div class="about-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="about-name">GreenBasket POS</div>
+        <div class="about-tagline">Built for Bangladeshi grocery shops</div>
+        <div class="about-version">Version 1.0.0</div>
+      </div>
+      <div class="settings-group" style="margin-top:0;">
+        <div class="settings-row" onclick="alert('Terms of Use')">
+          <div class="row-body" style="padding-left:4px;"><div class="row-label">Terms of Use</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="settings-row" onclick="alert('Privacy Policy')">
+          <div class="row-body" style="padding-left:4px;"><div class="row-label">Privacy Policy</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="settings-row" onclick="alert('Contact support via WhatsApp')">
+          <div class="row-body" style="padding-left:4px;"><div class="row-label">Contact Support</div></div>
+          <div class="row-right row-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item active" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<!-- PIN Change Sheet -->
+<div class="sheet-backdrop" id="pinBackdrop" onclick="closePinSheet()"></div>
+<div class="sheet" id="pinSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="pinSheetTitle">Change Owner PIN</div>
+    <button class="sheet-close" onclick="closePinSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="pin-step" id="pinStep">Step 1 of 3: Enter current PIN</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pressKey('1')">1</button>
+      <button class="pin-key" onclick="pressKey('2')">2</button>
+      <button class="pin-key" onclick="pressKey('3')">3</button>
+      <button class="pin-key" onclick="pressKey('4')">4</button>
+      <button class="pin-key" onclick="pressKey('5')">5</button>
+      <button class="pin-key" onclick="pressKey('6')">6</button>
+      <button class="pin-key" onclick="pressKey('7')">7</button>
+      <button class="pin-key" onclick="pressKey('8')">8</button>
+      <button class="pin-key" onclick="pressKey('9')">9</button>
+      <button class="pin-key action" onclick="clearPin()">CLR</button>
+      <button class="pin-key" onclick="pressKey('0')">0</button>
+      <button class="pin-key action" onclick="backspace()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('active');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('active');});
+
+// PIN Sheet
+let pinBuffer='',pinStep=1;
+const steps=['Step 1 of 3: Enter current PIN','Step 2 of 3: Enter new PIN','Step 3 of 3: Confirm new PIN'];
+function openPinSheet(role){
+  pinBuffer='';pinStep=1;
+  document.getElementById('pinSheetTitle').textContent='Change '+role+' PIN';
+  document.getElementById('pinStep').textContent=steps[0];
+  updateDots();
+  document.getElementById('pinBackdrop').classList.add('open');
+  document.getElementById('pinSheet').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePinSheet(){document.getElementById('pinBackdrop').classList.remove('open');document.getElementById('pinSheet').classList.remove('open');document.body.style.overflow='';}
+function pressKey(d){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=d;
+  updateDots();
+  if(pinBuffer.length===4){
+    setTimeout(()=>{
+      if(pinStep<3){pinStep++;document.getElementById('pinStep').textContent=steps[pinStep-1];pinBuffer='';updateDots();}
+      else{closePinSheet();toast('PIN updated successfully');}
+    },300);
+  }
+}
+function backspace(){if(pinBuffer.length>0){pinBuffer=pinBuffer.slice(0,-1);updateDots();}}
+function clearPin(){pinBuffer='';updateDots();}
+function updateDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('d'+i);
+    d.className='pin-dot'+(i<pinBuffer.length?' filled':'');
+  }
+}
+
+function confirmDelete(action){
+  if(confirm(`⚠ Are you sure you want to "${action}"? This cannot be undone.\n\nType DELETE to confirm.`)){
+    toast(action+' completed');
+  }
+}
+function toast(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:500;white-space:nowrap;';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+</script>
+</body>
+</html>

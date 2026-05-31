@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Categories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F4F0; --surface: #FFFFFF; --surface-2: #EEECEA; --border: #E0DDD6;
+  --text-1: #18170F; --text-2: #65625A; --text-3: #A09D96;
+  --gold: #C49A3C; --gold-bg: #FBF4E5; --green: #1F6B45; --green-bg: #E6F3EC;
+  --red: #B83232; --red-bg: #FAE8E8; --blue: #1E4FAD; --blue-bg: #E8EFFA;
+  --sidebar: #111010; --sidebar-text: #C8C5BC; --sidebar-muted: #6B6862;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text-1); min-height: 100vh; display: flex; }
+.sidebar { width: 240px; min-height: 100vh; background: var(--sidebar); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 200; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+.sidebar-header { padding: 24px 16px 20px; border-bottom: 1px solid #1E1D1D; display: flex; align-items: center; gap: 10px; }
+.logo-box { width: 38px; height: 38px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-box svg { width: 20px; height: 20px; }
+.sidebar-name { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem; color: #fff; }
+.sidebar-sub { font-size: 0.7rem; color: var(--sidebar-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.sidebar-nav { flex: 1; padding: 16px 8px; overflow-y: auto; }
+.nav-group { margin-bottom: 24px; }
+.nav-group-label { font-size: 0.65rem; font-weight: 600; color: var(--sidebar-muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px; margin-bottom: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; color: var(--sidebar-text); text-decoration: none; cursor: pointer; transition: background 0.15s, color 0.15s; position: relative; margin-bottom: 2px; }
+.nav-item:hover { background: #1E1D1D; color: #fff; }
+.nav-item.active { background: rgba(196,154,60,0.12); color: var(--gold); font-weight: 500; }
+.nav-item.active::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--gold); border-radius: 0 2px 2px 0; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 20px; }
+.sidebar-footer { padding: 12px 8px; border-top: 1px solid #1E1D1D; }
+.user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+.user-card:hover { background: #1E1D1D; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; color: #fff; flex-shrink: 0; }
+.user-name { font-size: 0.85rem; font-weight: 500; color: #fff; }
+.user-role { font-size: 0.7rem; color: var(--sidebar-muted); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 150; }
+.overlay.active { display: block; }
+.main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { height: 64px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+.hamburger { display: none; width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: transparent; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; }
+.hamburger svg { width: 18px; height: 18px; }
+.topbar-title-area { flex: 1; }
+.topbar-title { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.1rem; color: var(--text-1); }
+.topbar-sub { font-size: 0.75rem; color: var(--text-3); margin-top: 1px; }
+.topbar-actions { display: flex; gap: 8px; }
+.btn-outline-sm { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; background: transparent; font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn-outline-sm:hover { border-color: var(--gold); color: var(--gold); }
+.btn-outline-sm svg { width: 15px; height: 15px; }
+.btn-primary { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 38px; background: var(--text-1); color: #fff; border: none; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary svg { width: 16px; height: 16px; }
+.page-content { padding: 24px; flex: 1; }
+.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 20px; }
+.cat-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: grab; }
+.cat-row:last-child { border-bottom: none; }
+.cat-row:hover { background: #FAFAF8; }
+.drag-handle { width: 20px; display: flex; align-items: center; justify-content: center; color: var(--text-3); cursor: grab; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.drag-mode .drag-handle { opacity: 1; }
+.drag-handle svg { width: 14px; height: 14px; }
+.cat-emoji { font-size: 1.5rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cat-info { flex: 1; min-width: 0; }
+.cat-name { font-size: 0.9rem; font-weight: 600; color: var(--text-1); }
+.cat-count { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; }
+.cat-actions { display: flex; gap: 8px; align-items: center; }
+.btn-text-gold { background: none; border: none; font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 600; color: var(--gold); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.15s; }
+.btn-text-gold:hover { background: var(--gold-bg); }
+.btn-icon-red { width: 32px; height: 32px; background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.btn-icon-red:hover { background: var(--red-bg); border-color: var(--red); }
+.btn-icon-red svg { width: 14px; height: 14px; color: var(--red); }
+.btn-icon-red:disabled { opacity: 0.35; cursor: not-allowed; }
+.fab { position: fixed; bottom: 88px; right: 24px; width: 54px; height: 54px; background: var(--text-1); color: #fff; border: none; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s; z-index: 40; }
+.fab:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+.fab svg { width: 24px; height: 24px; }
+.sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 300; }
+.sheet-backdrop.open { display: block; }
+.sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); width: 100%; max-width: 480px; background: var(--surface); border-radius: 20px 20px 0 0; z-index: 310; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+.sheet.open { transform: translateX(-50%) translateY(0); }
+.sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+.sheet-header { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.sheet-title { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.05rem; }
+.sheet-close { width: 32px; height: 32px; border: none; background: var(--surface-2); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.sheet-close svg { width: 16px; height: 16px; }
+.sheet-body { padding: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 0.78rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; display: block; }
+.req { color: var(--red); }
+.form-input { width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: var(--text-1); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--gold); }
+.emoji-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; padding: 12px; background: var(--surface-2); border-radius: 10px; }
+.emoji-btn { width: 36px; height: 36px; border: 2px solid transparent; border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.emoji-btn:hover { border-color: var(--gold); transform: scale(1.1); }
+.emoji-btn.selected { border-color: var(--gold); background: var(--gold-bg); }
+.color-row { display: flex; gap: 10px; margin-top: 6px; }
+.color-swatch { width: 32px; height: 32px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: var(--text-1); }
+.sheet-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
+.btn-save { width: 100%; height: 52px; background: var(--text-1); color: #fff; border: none; border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.btn-save:hover { opacity: 0.85; }
+.btn-cancel { display: block; text-align: center; margin-top: 12px; font-size: 0.82rem; color: var(--text-3); cursor: pointer; }
+.btn-cancel:hover { color: var(--text-1); }
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 68px; background: var(--surface); border-top: 1px solid var(--border); z-index: 100; }
+.bottom-nav-inner { display: flex; align-items: center; height: 68px; padding: 0 4px; }
+.bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--text-3); font-size: 0.65rem; font-weight: 500; padding: 4px; transition: color 0.15s; }
+.bottom-nav-item.active { color: var(--gold); }
+.bottom-nav-item svg { width: 20px; height: 20px; }
+.bottom-nav-sell { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; background: var(--text-1); color: #fff; font-size: 0.7rem; font-weight: 600; border-radius: 14px; margin: 8px 4px; padding: 4px; height: calc(100% - 16px); }
+.bottom-nav-sell svg { width: 22px; height: 22px; }
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .hamburger { display: flex; }
+  .page-content { padding: 16px; padding-bottom: 84px; }
+  .bottom-nav { display: block; }
+  .fab { bottom: 84px; }
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item active" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Categories</div>
+      <div class="topbar-sub" id="catCount">10 categories</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-outline-sm" id="editOrderBtn" onclick="toggleDragMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/></svg>
+        Edit Order
+      </button>
+      <button class="btn-primary" onclick="openSheet()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Category
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="section-card" id="catList">
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🌾</div>
+        <div class="cat-info"><div class="cat-name">Rice & Flour</div><div class="cat-count">18 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Rice & Flour', '🌾')">Edit</button>
+          <button class="btn-icon-red" title="Delete" onclick="deleteCategory(this, 18)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🧅</div>
+        <div class="cat-info"><div class="cat-name">Vegetables</div><div class="cat-count">24 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Vegetables', '🧅')">Edit</button>
+          <button class="btn-icon-red" title="Delete" onclick="deleteCategory(this, 24)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🫙</div>
+        <div class="cat-info"><div class="cat-name">Spices & Masala</div><div class="cat-count">31 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Spices & Masala', '🫙')">Edit</button>
+          <button class="btn-icon-red" title="Delete" onclick="deleteCategory(this, 31)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🛢️</div>
+        <div class="cat-info"><div class="cat-name">Oil & Ghee</div><div class="cat-count">12 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Oil & Ghee', '🛢️')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🧂</div>
+        <div class="cat-info"><div class="cat-name">Salt & Sugar</div><div class="cat-count">6 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Salt & Sugar', '🧂')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🫘</div>
+        <div class="cat-info"><div class="cat-name">Lentils & Pulses</div><div class="cat-count">15 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Lentils & Pulses', '🫘')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 15)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🧃</div>
+        <div class="cat-info"><div class="cat-name">Beverages</div><div class="cat-count">14 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Beverages', '🧃')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 14)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🥛</div>
+        <div class="cat-info"><div class="cat-name">Dairy</div><div class="cat-count">9 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Dairy', '🥛')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 9)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">🧹</div>
+        <div class="cat-info"><div class="cat-name">Household</div><div class="cat-count">20 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Household', '🧹')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 20)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cat-row" draggable="true">
+        <div class="drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>
+        <div class="cat-emoji">📦</div>
+        <div class="cat-info"><div class="cat-name">Others</div><div class="cat-count">14 products</div></div>
+        <div class="cat-actions">
+          <button class="btn-text-gold" onclick="openSheet('Others', '📦')">Edit</button>
+          <button class="btn-icon-red" onclick="deleteCategory(this, 14)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<button class="fab" onclick="openSheet()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item active" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<!-- SHEET -->
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="catSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="sheetTitle">Add Category</div>
+    <button class="sheet-close" onclick="closeSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="form-group">
+      <label class="form-label">Category Name <span class="req">*</span></label>
+      <input class="form-input" id="catNameInput" type="text" placeholder="e.g. Rice & Flour">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon (emoji)</label>
+      <div class="emoji-grid" id="emojiGrid">
+        <button class="emoji-btn" onclick="selectEmoji(this)">🌾</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧅</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🫙</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🛢️</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧂</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🫘</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧃</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🥛</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧹</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">📦</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🍎</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🥩</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🐟</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🍫</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧁</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧴</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">💊</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🍜</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🫚</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🌽</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🥬</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🫛</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🥜</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🍵</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">☕</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧊</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🍬</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🪣</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">🧺</button>
+        <button class="emoji-btn" onclick="selectEmoji(this)">📱</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Accent Color (optional)</label>
+      <div class="color-row">
+        <div class="color-swatch selected" style="background:#1F6B45" onclick="selectColor(this)"></div>
+        <div class="color-swatch" style="background:#C49A3C" onclick="selectColor(this)"></div>
+        <div class="color-swatch" style="background:#1E4FAD" onclick="selectColor(this)"></div>
+        <div class="color-swatch" style="background:#B83232" onclick="selectColor(this)"></div>
+        <div class="color-swatch" style="background:#7B3FA0" onclick="selectColor(this)"></div>
+        <div class="color-swatch" style="background:#C07028" onclick="selectColor(this)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-save" onclick="saveCategory()">Save Category</button>
+    <span class="btn-cancel" onclick="closeSheet()">Cancel</span>
+  </div>
+</div>
+
+<script>
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); });
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+
+let dragMode = false;
+function toggleDragMode() {
+  dragMode = !dragMode;
+  document.getElementById('catList').classList.toggle('drag-mode', dragMode);
+  document.getElementById('editOrderBtn').textContent = dragMode ? '✓ Done' : 'Edit Order';
+}
+
+function openSheet(name = null, emoji = null) {
+  document.getElementById('sheetTitle').textContent = name ? `Edit: ${name}` : 'Add Category';
+  if (name) document.getElementById('catNameInput').value = name;
+  else document.getElementById('catNameInput').value = '';
+  if (emoji) {
+    document.querySelectorAll('.emoji-btn').forEach(b => {
+      b.classList.toggle('selected', b.textContent.trim() === emoji);
+    });
+  }
+  document.getElementById('sheetBackdrop').classList.add('open');
+  document.getElementById('catSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() {
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  document.getElementById('catSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function selectEmoji(el) {
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function deleteCategory(btn, count) {
+  if (count > 0) {
+    alert(`This category has ${count} products. Move them to another category before deleting.`);
+    return;
+  }
+  if (confirm('Delete this category?')) {
+    btn.closest('.cat-row').remove();
+    updateCount();
+  }
+}
+
+function saveCategory() {
+  closeSheet();
+  toast('Category saved successfully');
+}
+
+function updateCount() {
+  const n = document.querySelectorAll('.cat-row').length;
+  document.getElementById('catCount').textContent = n + ' categories';
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:500;white-space:nowrap;';
+  t.textContent = '✓ ' + msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenBasket POS — Suppliers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F4F0;--surface:#FFFFFF;--surface-2:#EEECEA;--border:#E0DDD6;--text-1:#18170F;--text-2:#65625A;--text-3:#A09D96;--gold:#C49A3C;--gold-bg:#FBF4E5;--green:#1F6B45;--green-bg:#E6F3EC;--red:#B83232;--red-bg:#FAE8E8;--blue:#1E4FAD;--blue-bg:#E8EFFA;--sidebar:#111010;--sidebar-text:#C8C5BC;--sidebar-muted:#6B6862;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-1);min-height:100vh;display:flex;}
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-header{padding:24px 16px 20px;border-bottom:1px solid #1E1D1D;display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-box svg{width:20px;height:20px;}
+.sidebar-name{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;color:#fff;}
+.sidebar-sub{font-size:0.7rem;color:var(--sidebar-muted);letter-spacing:0.05em;text-transform:uppercase;}
+.sidebar-nav{flex:1;padding:16px 8px;overflow-y:auto;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:0.65rem;font-weight:600;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:0.88rem;color:var(--sidebar-text);text-decoration:none;cursor:pointer;transition:background 0.15s,color 0.15s;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:#1E1D1D;color:#fff;}
+.nav-item.active{background:rgba(196,154,60,0.12);color:var(--gold);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:0.65rem;font-weight:600;padding:2px 6px;border-radius:20px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid #1E1D1D;}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.user-card:hover{background:#1E1D1D;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:0.85rem;font-weight:500;color:#fff;}
+.user-role{font-size:0.7rem;color:var(--sidebar-muted);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:150;}
+.overlay.active{display:block;}
+.main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.hamburger{display:none;width:38px;height:38px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
+.hamburger svg{width:18px;height:18px;}
+.topbar-title-area{flex:1;}
+.topbar-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.1rem;color:var(--text-1);}
+.topbar-sub{font-size:0.75rem;color:var(--text-3);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;}
+.btn-primary{display:flex;align-items:center;gap:6px;padding:0 14px;height:38px;background:var(--text-1);color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:opacity 0.15s;white-space:nowrap;}
+.btn-primary:hover{opacity:0.85;}
+.btn-primary svg{width:16px;height:16px;}
+.page-content{padding:24px;flex:1;}
+
+/* Owed Banner */
+.owed-banner{background:var(--blue-bg);border:1px solid #BDD0F5;border-radius:12px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.owed-label{font-size:0.72rem;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;}
+.owed-amount{font-family:'Playfair Display',serif;font-weight:700;font-size:1.6rem;color:var(--blue);margin-top:2px;}
+.owed-sub{font-size:0.75rem;color:var(--text-2);margin-top:2px;}
+.owed-icon{width:48px;height:48px;background:rgba(30,79,173,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.owed-icon svg{width:24px;height:24px;color:var(--blue);}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:18px;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3);}
+.search-input{width:100%;height:42px;padding:0 12px 0 38px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--gold);}
+.search-input::placeholder{color:var(--text-3);}
+
+/* Supplier Cards */
+.supplier-list{display:flex;flex-direction:column;gap:10px;}
+.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:box-shadow 0.2s,border-color 0.2s;}
+.supplier-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);border-color:#D0CCC4;}
+.sup-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px;}
+.sup-avatar{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#fff;flex-shrink:0;background:var(--blue);}
+.sup-avatar.no-owe{background:var(--text-2);}
+.sup-info{flex:1;}
+.sup-name{font-size:0.92rem;font-weight:600;color:var(--text-1);}
+.sup-contact{font-size:0.75rem;color:var(--text-3);margin-top:2px;}
+.sup-products{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.prod-chip{font-size:0.65rem;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--text-2);}
+.btn-edit-sm{width:36px;height:36px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
+.btn-edit-sm:hover{background:var(--surface-2);}
+.btn-edit-sm svg{width:14px;height:14px;color:var(--text-2);}
+.sup-stats{display:flex;gap:20px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:12px;}
+.sup-stat-label{font-size:0.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;}
+.sup-stat-val{font-size:0.85rem;font-weight:600;color:var(--text-1);margin-top:2px;}
+.sup-stat-val.owe{color:var(--blue);}
+.sup-actions{display:flex;gap:8px;}
+.btn-pay{flex:1;height:36px;background:var(--blue-bg);border:1px solid #BDD0F5;border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;color:var(--blue);cursor:pointer;transition:all 0.15s;}
+.btn-pay:hover{background:var(--blue);color:#fff;}
+.btn-hist{flex:1;height:36px;background:transparent;border:1px solid var(--border);border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:500;color:var(--text-2);cursor:pointer;transition:all 0.15s;}
+.btn-hist:hover{border-color:var(--gold);color:var(--gold);}
+
+/* FAB */
+.fab{position:fixed;bottom:88px;right:24px;width:54px;height:54px;background:var(--text-1);color:#fff;border:none;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.2);transition:transform 0.2s,box-shadow 0.2s;z-index:40;}
+.fab:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.25);}
+.fab svg{width:24px;height:24px;}
+
+/* Sheet */
+.sheet-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);z-index:300;}
+.sheet-backdrop.open{display:block;}
+.sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:520px;background:var(--surface);border-radius:20px 20px 0 0;z-index:310;display:flex;flex-direction:column;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);}
+.sheet.open{transform:translateX(-50%) translateY(0);}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-header{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sheet-title{font-family:'Playfair Display',serif;font-weight:600;font-size:1.05rem;}
+.sheet-close{width:32px;height:32px;border:none;background:var(--surface-2);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sheet-close svg{width:16px;height:16px;}
+.sheet-body{padding:20px;overflow-y:auto;max-height:72vh;}
+.sheet-footer{padding:14px 20px;border-top:1px solid var(--border);}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:6px;display:block;}
+.req{color:var(--red);}
+.form-input,.form-select,.form-textarea{width:100%;height:42px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.85rem;color:var(--text-1);outline:none;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);}
+.form-select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A09D96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.form-textarea{height:auto;padding:10px 12px;min-height:68px;resize:vertical;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn-save{width:100%;height:52px;background:var(--text-1);color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:0.92rem;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.btn-save:hover{opacity:0.85;}
+.btn-save.blue{background:var(--blue);}
+.btn-cancel{display:block;text-align:center;margin-top:12px;font-size:0.82rem;color:var(--text-3);cursor:pointer;}
+
+/* Pay sheet */
+.owe-display{background:var(--blue-bg);border:1px solid #BDD0F5;border-radius:10px;padding:14px;text-align:center;margin-bottom:16px;}
+.owe-display-label{font-size:0.72rem;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.owe-display-amount{font-family:'Playfair Display',serif;font-weight:700;font-size:2rem;color:var(--blue);margin-top:4px;}
+.prefix-wrap{position:relative;}
+.prefix-wrap span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);}
+.prefix-wrap .form-input{padding-left:24px;}
+
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--border);z-index:100;}
+.bottom-nav-inner{display:flex;align-items:center;height:68px;padding:0 4px;}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--text-3);font-size:0.65rem;font-weight:500;padding:4px;transition:color 0.15s;}
+.bottom-nav-item.active{color:var(--gold);}
+.bottom-nav-item svg{width:20px;height:20px;}
+.bottom-nav-sell{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;background:var(--text-1);color:#fff;font-size:0.7rem;font-weight:600;border-radius:14px;margin:8px 4px;padding:4px;height:calc(100% - 16px);}
+.bottom-nav-sell svg{width:22px;height:22px;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.page-content{padding:16px;padding-bottom:84px}.bottom-nav{display:block}.fab{bottom:84px}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="sidebar-name">GreenBasket</div><div class="sidebar-sub">Grocery POS</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a class="nav-item" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sell</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Inventory</div>
+      <a class="nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Products</a>
+      <a class="nav-item" href="categories.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Categories</a>
+      <a class="nav-item" href="stock.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Stock<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <a class="nav-item" href="cash.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Cash Reserve</a>
+      <a class="nav-item" href="sales-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Sales History</a>
+      <a class="nav-item" href="expenses.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Expenses</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">People</div>
+      <a class="nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Customers</a>
+      <a class="nav-item active" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Insights</div>
+      <a class="nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+      <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card"><div class="avatar">RM</div><div><div class="user-name">Rahim Mia</div><div class="user-role">Owner</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbar-title-area">
+      <div class="topbar-title">Suppliers</div>
+      <div class="topbar-sub">6 suppliers · ৳22,000 owed</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-primary" onclick="openAddSheet()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Supplier
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="owed-banner">
+      <div>
+        <div class="owed-label">Total Owed to Suppliers</div>
+        <div class="owed-amount">৳22,000</div>
+        <div class="owed-sub">Across 3 suppliers</div>
+      </div>
+      <div class="owed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+    </div>
+
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="Search suppliers by name...">
+    </div>
+
+    <div class="supplier-list">
+
+      <div class="supplier-card">
+        <div class="sup-top">
+          <div class="sup-avatar">KT</div>
+          <div class="sup-info">
+            <div class="sup-name">Karim Traders</div>
+            <div class="sup-contact">📞 01800-234567 · COD payment</div>
+            <div class="sup-products">
+              <span class="prod-chip">🌾 Rice</span>
+              <span class="prod-chip">🫘 Lentils</span>
+              <span class="prod-chip">🧂 Salt</span>
+            </div>
+          </div>
+          <button class="btn-edit-sm" onclick="openAddSheet('Karim Traders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+        <div class="sup-stats">
+          <div><div class="sup-stat-label">Last Purchase</div><div class="sup-stat-val">3 days ago</div></div>
+          <div><div class="sup-stat-label">Total Purchased</div><div class="sup-stat-val">৳2,40,000</div></div>
+          <div><div class="sup-stat-label">Owed to Supplier</div><div class="sup-stat-val owe">৳12,000</div></div>
+        </div>
+        <div class="sup-actions">
+          <button class="btn-pay" onclick="openPaySheet('Karim Traders', 12000)">Pay ৳12,000</button>
+          <button class="btn-hist" onclick="alert('View purchase history')">History</button>
+        </div>
+      </div>
+
+      <div class="supplier-card">
+        <div class="sup-top">
+          <div class="sup-avatar">RW</div>
+          <div class="sup-info">
+            <div class="sup-name">Rahman Wholesale</div>
+            <div class="sup-contact">📞 01900-445566 · Weekly payment</div>
+            <div class="sup-products">
+              <span class="prod-chip">🛢️ Oil</span>
+              <span class="prod-chip">🧃 Beverages</span>
+            </div>
+          </div>
+          <button class="btn-edit-sm" onclick="openAddSheet('Rahman Wholesale')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+        <div class="sup-stats">
+          <div><div class="sup-stat-label">Last Purchase</div><div class="sup-stat-val">1 week ago</div></div>
+          <div><div class="sup-stat-label">Total Purchased</div><div class="sup-stat-val">৳85,000</div></div>
+          <div><div class="sup-stat-label">Owed to Supplier</div><div class="sup-stat-val owe">৳10,000</div></div>
+        </div>
+        <div class="sup-actions">
+          <button class="btn-pay" onclick="openPaySheet('Rahman Wholesale', 10000)">Pay ৳10,000</button>
+          <button class="btn-hist" onclick="alert('View purchase history')">History</button>
+        </div>
+      </div>
+
+      <div class="supplier-card">
+        <div class="sup-top">
+          <div class="sup-avatar no-owe">CD</div>
+          <div class="sup-info">
+            <div class="sup-name">City Distributors</div>
+            <div class="sup-contact">📞 01700-667788 · Monthly payment</div>
+            <div class="sup-products">
+              <span class="prod-chip">🫙 Spices</span>
+              <span class="prod-chip">🧹 Household</span>
+              <span class="prod-chip">📦 Others</span>
+            </div>
+          </div>
+          <button class="btn-edit-sm" onclick="openAddSheet('City Distributors')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+        <div class="sup-stats">
+          <div><div class="sup-stat-label">Last Purchase</div><div class="sup-stat-val">Today</div></div>
+          <div><div class="sup-stat-label">Total Purchased</div><div class="sup-stat-val">৳1,20,000</div></div>
+          <div><div class="sup-stat-label">Owed to Supplier</div><div class="sup-stat-val" style="color:var(--green);">Cleared ✓</div></div>
+        </div>
+        <div class="sup-actions">
+          <button class="btn-hist" style="flex:2;" onclick="alert('View purchase history')">View History</button>
+          <button class="btn-edit-sm" onclick="openAddSheet('City Distributors')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<button class="fab" onclick="openAddSheet()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bottom-nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</a>
+    <a class="bottom-nav-item active" href="suppliers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</a>
+    <a class="bottom-nav-sell" href="sell.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>SELL</a>
+    <a class="bottom-nav-item" href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</a>
+    <a class="bottom-nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>More</a>
+  </div>
+</nav>
+
+<!-- Add Sheet -->
+<div class="sheet-backdrop" id="addBackdrop" onclick="closeAddSheet()"></div>
+<div class="sheet" id="addSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="addTitle">Add Supplier</div>
+    <button class="sheet-close" onclick="closeAddSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Business Name <span class="req">*</span></label>
+        <input class="form-input" type="text" id="supName" placeholder="e.g. Karim Traders">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Person</label>
+        <input class="form-input" type="text" placeholder="e.g. Karim Uddin">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" type="tel" placeholder="01800-000000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Terms</label>
+        <select class="form-select">
+          <option>COD</option>
+          <option>Weekly</option>
+          <option>Monthly</option>
+          <option>On Demand</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <textarea class="form-textarea" placeholder="Supplier address..."></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" placeholder="e.g. Delivers every Monday morning"></textarea>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-save" onclick="saveSupplier()">Save Supplier</button>
+    <span class="btn-cancel" onclick="closeAddSheet()">Cancel</span>
+  </div>
+</div>
+
+<!-- Pay Sheet -->
+<div class="sheet-backdrop" id="payBackdrop" onclick="closePaySheet()"></div>
+<div class="sheet" id="paySheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Pay Supplier</div>
+    <button class="sheet-close" onclick="closePaySheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="owe-display">
+      <div class="owe-display-label" id="payName">Karim Traders</div>
+      <div class="owe-display-amount" id="payAmount">৳12,000</div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin-top:2px;">Outstanding Balance</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount Paying <span class="req">*</span></label>
+      <div class="prefix-wrap">
+        <span>৳</span>
+        <input class="form-input" type="number" id="payInput" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <select class="form-select">
+        <option>Cash</option>
+        <option>bKash</option>
+        <option>Bank Transfer</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">Reference / Note</label>
+      <input class="form-input" type="text" placeholder="e.g. Invoice #245">
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-save blue" onclick="recordPayment()">Record Payment</button>
+    <span class="btn-cancel" onclick="closePaySheet()">Cancel</span>
+  </div>
+</div>
+
+<script>
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');
+document.getElementById('hamburger').addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('active');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('active');});
+function openAddSheet(name=null){
+  document.getElementById('addTitle').textContent=name?'Edit: '+name:'Add Supplier';
+  if(name)document.getElementById('supName').value=name;
+  else document.getElementById('supName').value='';
+  document.getElementById('addBackdrop').classList.add('open');
+  document.getElementById('addSheet').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeAddSheet(){document.getElementById('addBackdrop').classList.remove('open');document.getElementById('addSheet').classList.remove('open');document.body.style.overflow='';}
+function saveSupplier(){closeAddSheet();toast('Supplier saved successfully');}
+function openPaySheet(name,amt){
+  document.getElementById('payName').textContent=name;
+  document.getElementById('payAmount').textContent='৳'+amt.toLocaleString();
+  document.getElementById('payInput').value=amt;
+  document.getElementById('payBackdrop').classList.add('open');
+  document.getElementById('paySheet').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePaySheet(){document.getElementById('payBackdrop').classList.remove('open');document.getElementById('paySheet').classList.remove('open');document.body.style.overflow='';}
+function recordPayment(){closePaySheet();toast('Payment recorded successfully');}
+function toast(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:500;white-space:nowrap;';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+</script>
+</body>
+</html>
